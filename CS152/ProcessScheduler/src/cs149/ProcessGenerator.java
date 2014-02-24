@@ -10,54 +10,66 @@ import java.util.List;
  *
  */
 public class ProcessGenerator {
-    private float totalQuanta, runTimeSum;
+    private float runTimeSum;
+    private int totalQuanta;
     private List<Process> processes;
     private char name;
     private Scheduler schedule;
     
     public ProcessGenerator(int totalQuanta, long seed) {
-        this.totalQuanta = new Integer(totalQuanta).floatValue();
+        //this.totalQuanta = new Integer(totalQuanta).floatValue();
+        this.totalQuanta = totalQuanta;
         name = 'a';
-        schedule = new Scheduler(totalQuanta);
         generateProcesses(seed);
     }
     
     public ProcessGenerator(int totalQuanta) {
-        this.totalQuanta = new Integer(totalQuanta).floatValue();
+        //this.totalQuanta = new Integer(totalQuanta).floatValue();
+        this.totalQuanta = totalQuanta;
         name = 'a';
-        schedule = new Scheduler(totalQuanta);
         generateProcesses();
     }
     
     public void generateProcesses(long seed) {
-        runTimeSum = 0.0f;
+        //runTimeSum = 0.0f;
+        schedule = new Scheduler(totalQuanta);
         name = 'a';
         Process newProcess;
-        //processes = new ArrayList<Process>();
-        
-        while (schedule.getLongestWait() > 2) {
-            if (name == 'z') {
-                name = 'A';
-            }
-            newProcess = new Process(name, seed);
-            
-            name++;
-        }
-    }
-    
-    public void generateProcesses() {
-        runTimeSum = 0.0f;
-        name = 'a';
-        Process newProcess;
-        //processes = new ArrayList<Process>();
         
         while (schedule.shouldCreateProcess()) {
             if (name == 'z') {
                 name = 'A';
             }
-            newProcess = new Process(name);
-            
+            newProcess = new Process(name, seed);
+            processes = schedule.addProcess(newProcess);
             name++;
+        }
+    }
+    
+    public void generateProcesses() {
+        //runTimeSum = 0.0f;
+        schedule = new Scheduler(totalQuanta);
+        name = 'a';
+        Process newProcess;
+        
+        while (schedule.shouldCreateProcess()) {
+            if (name == '{') {
+                name = 'A';
+            }
+            newProcess = new Process(name);
+            processes = schedule.addProcess(newProcess);
+            name++;
+        }
+    }
+    
+    public void listProcesses() {
+        int size = processes.size();
+        System.out.printf("%d processes:\n", size);
+        for (int i = 0; i < size; i++) {
+            Process current = processes.get(i);
+            System.out.printf("%c: arrival=%.1f,runtime=%.1f,priority=%d\n", 
+                    current.getName(), current.getArrivalTime(), 
+                    current.getRunTime(), current.getPriority());
         }
     }
     
@@ -80,22 +92,36 @@ public class ProcessGenerator {
             return create;
         }
         
-        public void addProcess(Process theProcess) {
+        /**
+         * Insertion sort based on arrival time. 
+         * @param theProcess the process to be added
+         * @return the list of processes
+         */
+        public List<Process> addProcess(Process theProcess) {
             int size = processes.size(), position = 0;
+            float processArrivalTime = theProcess.getArrivalTime();
             
             for (int i = 0; i < size; i++) {
                 position = i;
-                if (theProcess.getArrivalTime() < processes.get(i).getArrivalTime()) {
+                /* If arrival time of process to be added is less than 
+                 * process at index i, shift everything to the right
+                 */
+                if (processArrivalTime < processes.get(i).getArrivalTime()) {
                     break;
+                  /* If the end of the list is reached, append process to end of list */
+                } else if (i == size - 1){
+                    position = i + 1;
                 }
             }
+            /* First process added to position 0 */
             processes.add(position, theProcess);
             create = checkWait();
+            return processes;
         }
         
         private boolean checkWait() {
             ArrayList<Integer> waitBlocks = new ArrayList<Integer>();
-            int size = processes.size(), size2 = waitBlocks.size(), startingBlock = 0, endOfLastBlock = 0;
+            int size = processes.size(), size2, startingBlock = 0, endOfLastBlock = 0;
             float arrivalTime, runTime, endTime;
             
             /* endOfLastBlock is a marker for the end position of the last process 
@@ -129,6 +155,8 @@ public class ProcessGenerator {
                     break;
                 }
             }
+            
+            size2 = waitBlocks.size();
             
             for (int j = 0; j < size2; j++) {
                 if (waitBlocks.get(j) > 2) {
