@@ -80,10 +80,12 @@ public class ProcessGenerator {
     private class Scheduler {
         private boolean create;
         private List<Process> processes;
+        private int TOTAL_QUANTA;
         
         public Scheduler(int totalQuanta) {
             create = true;
             processes = new ArrayList<Process>();
+            TOTAL_QUANTA = totalQuanta;
         }
         
         public boolean shouldCreateProcess() {
@@ -128,12 +130,12 @@ public class ProcessGenerator {
             for (int i = 0; i < size; i++) {
                 arrivalTime = processes.get(i).getArrivalTime();
                 runTime = processes.get(i).getRunTime();
-                endTime = arrivalTime + runTime;
-                startingBlock = (int) Math.floor(arrivalTime);
+                startingBlock = (int) Math.ceil(arrivalTime);
+                endTime = (float) startingBlock + runTime;
                 
                 if (i == 0) {
                     /* Ex: arrivalTime = 4.5, takes up whole block from 4-5 
-                     * startingBlock is also the number of blocks before arrivalTime
+                     * startingBlock is also the number of blocks before the process runs
                      */
                     waitBlocks.add(startingBlock);
                     endOfLastBlock = (int) Math.ceil(endTime);
@@ -154,6 +156,7 @@ public class ProcessGenerator {
                 }
             }
             
+            waitBlocks.add(TOTAL_QUANTA - endOfLastBlock);
             size2 = waitBlocks.size();
             
             for (int j = 0; j < size2; j++) {
