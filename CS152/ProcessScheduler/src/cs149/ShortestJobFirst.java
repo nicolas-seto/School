@@ -11,6 +11,7 @@ public class ShortestJobFirst implements Algorithm {
     private ProcessGenerator generator;
     private int runTimeSum, count;
     private StringBuilder timechart, timestamp;
+    private Map<String, Float> runOutput;
     private static final int TOTAL_QUANTA = 100;
     
     public ShortestJobFirst() {
@@ -20,12 +21,13 @@ public class ShortestJobFirst implements Algorithm {
         count = 0;
         timechart = new StringBuilder();
         timestamp = new StringBuilder();
+        runOutput = run();
     }
     
     /**
      * Runs SJF algorithm.
      */
-    public Map<String, Float> run() {
+    private Map<String, Float> run() {
         int counter = 0, idleBlocks = 0;
         float turnaroundTime = 0, waitingTime = 0, responseTime = 0;
         List<Process> processesRan = new ArrayList<Process>();
@@ -101,6 +103,8 @@ public class ShortestJobFirst implements Algorithm {
                 timestamp.append(timestampSnippet);
                 count++;
             }
+            /* Update order of processes after timechart is updated */
+            reorderReadyProcesses(counter, runTimeSum);
             
             counter++;
             if (runTimeSum > TOTAL_QUANTA) {
@@ -125,11 +129,48 @@ public class ShortestJobFirst implements Algorithm {
         return outputs;
     }
     
+    /**
+     * Returns the output for this run.
+     */
+    public Map<String, Float> getOutput() {
+        return runOutput;
+    }
+    
     private String listTimechart() {
         return timechart.toString();
     }
     
     private String listTimestamp() {
         return timestamp.toString();
+    }
+    
+    /**
+     * Finds processes that are ready and reorders them based on estimated
+     * run time.
+     * @param index the index of the process that just ran
+     * @param blocksUsed the number of blocks that have been used
+     */
+    private void reorderReadyProcesses(int index, int blocksUsed) {
+        int start = index + 1, size = processes.size(), savedIndex = start;
+        float minimum = 10;
+        
+        for (int i = start; i < size; i++) {
+            Process aProcess = processes.get(i);
+            float runTime = aProcess.getRunTime();
+            float arrivalTime = aProcess.getArrivalTime();
+            
+            if (arrivalTime < blocksUsed) {
+                if (runTime < minimum) {
+                    minimum = runTime;
+                    savedIndex = i;
+                }
+            } else {
+                break;
+            }
+        }
+        
+        Process savedProcess = processes.get(savedIndex);
+        processes.remove(savedIndex);
+        processes.add(start, savedProcess);
     }
 }

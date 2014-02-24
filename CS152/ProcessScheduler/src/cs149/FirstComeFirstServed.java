@@ -11,6 +11,7 @@ public class FirstComeFirstServed implements Algorithm {
     private ProcessGenerator generator;
     private int runTimeSum, count;
     private StringBuilder timechart, timestamp;
+    private Map<String, Float> runOutput;
     private static final int TOTAL_QUANTA = 100;
     
     /**
@@ -23,12 +24,13 @@ public class FirstComeFirstServed implements Algorithm {
         count = 0;
         timechart = new StringBuilder();
         timestamp = new StringBuilder();
+        runOutput = run();
     }
     
     /**
      * Runs FCFS algorithm.
      */
-    public Map<String, Float> run() {
+    private Map<String, Float> run() {
         int counter = 0, idleBlocks = 0;
         float turnaroundTime = 0, waitingTime = 0, responseTime = 0;
         List<Process> processesRan = new ArrayList<Process>();
@@ -126,6 +128,13 @@ public class FirstComeFirstServed implements Algorithm {
         System.out.printf("Throughput: %.2f\n\n", outputs.get("throughput"));
         
         return outputs;
+    }
+    
+    /**
+     * Returns the output for this run.
+     */
+    public Map<String, Float> getOutput() {
+        return runOutput;
     }
     
     private String listTimechart() {

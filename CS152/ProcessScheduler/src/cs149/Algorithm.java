@@ -6,5 +6,5 @@ public interface Algorithm {
     /**
      * Run the algorithm.
      */
-    public Map<String, Float> run();
+    public Map<String, Float> getOutput();
 }

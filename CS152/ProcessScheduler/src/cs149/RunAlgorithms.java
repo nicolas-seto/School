@@ -4,8 +4,12 @@ import java.util.Map;
 
 public class RunAlgorithms {
     public static void main(String[] args) {
-        FirstComeFirstServed algorithm1 = new FirstComeFirstServed();
         System.out.println("FCFS Run1");
-        Map<String, Float> output = algorithm1.run();
+        FirstComeFirstServed algorithm1 = new FirstComeFirstServed();
+        //Map<String, Float> output = algorithm1.getOutput();
+        
+        System.out.println("SJF Run1");
+        ShortestJobFirst algorithm2 = new ShortestJobFirst();
+        //Map<String, Float> output2 = algorithm2.getOutput();
     }
 }
