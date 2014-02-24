@@ -145,7 +145,7 @@ public class ProcessGenerator {
                         waitBlocks.add(startingBlock - endOfLastBlock);
                         endOfLastBlock = (int) Math.ceil(endTime);
                     } else {
-                        endOfLastBlock += (int) Math.ceil(runTime);
+                        endOfLastBlock += processes.get(i).getRunBlockSize();
                     }
                 }
                 /* If a process runs past the totalQuanta mark, stop checking */

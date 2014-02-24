@@ -22,7 +22,7 @@ public class Process {
         generate();
     }
 
-    public void generate()
+    private void generate()
     {
         arrivalTime = randGen.nextFloat() * arrivalScale;
         runTime = (randGen.nextFloat() * runTimeScale) + runTimeOffset;
@@ -43,5 +43,9 @@ public class Process {
     
     public int getPriority() {
         return priority;
+    }
+    
+    public int getRunBlockSize() {
+        return (int) Math.ceil(runTime);
     }
 }

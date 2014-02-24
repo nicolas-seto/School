@@ -1,8 +1,10 @@
 package cs149;
 
+import java.util.Map;
+
 public interface Algorithm {
     /**
      * Run the algorithm.
      */
-    public void run();
+    public Map<String, Float> run();
 }
