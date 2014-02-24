@@ -13,6 +13,9 @@ public class FirstComeFirstServed implements Algorithm {
     private StringBuilder timechart;
     private static final int TOTAL_QUANTA = 100;
     
+    /**
+     * runTimeSum is the number of blocks that have been used so far.
+     */
     public FirstComeFirstServed() {
         generator = new ProcessGenerator(TOTAL_QUANTA);
         processes = generator.getProcesses();
@@ -25,14 +28,17 @@ public class FirstComeFirstServed implements Algorithm {
      */
     public Map<String, Float> run() {
         int counter = 0;
-        float turnaroundTime = 0, waitingTime = 0, reponseTime = 0;
+        float turnaroundTime = 0, waitingTime = 0, responseTime = 0;
         List<Process> processesRan;
         /* TOTAL_QUANTA is the total running time, in this case 100 units */
-        while (runTimeSum < TOTAL_QUANTA) {
+        while (runTimeSum <= TOTAL_QUANTA) {
             Process aProcess = processes.get(counter);
             float arrivalTime = aProcess.getArrivalTime();
             float runTime = aProcess.getRunTime();
-            /* Must find the exact endTime because process can start in middle of quantum */
+            /* Must find the exact endTime because process can start in middle of quantum.
+             * This endTime is the assumption that the process can start right when
+             * it arrives.
+              */
             float endTime = arrivalTime + runTime;
             
             if (counter == 0) {
@@ -44,12 +50,16 @@ public class FirstComeFirstServed implements Algorithm {
                  * process. The process did not have to wait and fast response.
                  */
                 if (arrivalTime >= (float) runTimeSum) {
-                    runTimeSum += ((int) Math.floor(arrivalTime) - runTimeSum) + (int) Math.ceil(endTime);
+                    runTimeSum = (int) Math.ceil(endTime);
                     turnaroundTime += runTime;
                 } else {
                 /* This process starts right after the end of the quantum of
                  * the last process
                  */
+                    float currentWait = (float) runTimeSum - arrivalTime;
+                    turnaroundTime += currentWait + runTime;
+                    waitingTime += currentWait;
+                    responseTime += currentWait;
                     runTimeSum += aProcess.getRunBlockSize();
                 }
             }
