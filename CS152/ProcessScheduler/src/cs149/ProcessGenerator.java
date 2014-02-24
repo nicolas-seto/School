@@ -10,34 +10,30 @@ import java.util.List;
  *
  */
 public class ProcessGenerator {
-    private float runTimeSum;
     private int totalQuanta;
     private List<Process> processes;
     private char name;
     private Scheduler schedule;
     
     public ProcessGenerator(int totalQuanta, long seed) {
-        //this.totalQuanta = new Integer(totalQuanta).floatValue();
         this.totalQuanta = totalQuanta;
         name = 'a';
         generateProcesses(seed);
     }
     
     public ProcessGenerator(int totalQuanta) {
-        //this.totalQuanta = new Integer(totalQuanta).floatValue();
         this.totalQuanta = totalQuanta;
         name = 'a';
         generateProcesses();
     }
     
     public void generateProcesses(long seed) {
-        //runTimeSum = 0.0f;
         schedule = new Scheduler(totalQuanta);
         name = 'a';
         Process newProcess;
         
         while (schedule.shouldCreateProcess()) {
-            if (name == 'z') {
+            if (name == '{') {
                 name = 'A';
             }
             newProcess = new Process(name, seed);
@@ -47,7 +43,6 @@ public class ProcessGenerator {
     }
     
     public void generateProcesses() {
-        //runTimeSum = 0.0f;
         schedule = new Scheduler(totalQuanta);
         name = 'a';
         Process newProcess;
@@ -74,19 +69,13 @@ public class ProcessGenerator {
     }
     
     private class Scheduler {
-        //private int maxWaitPeriod;
         private boolean create;
         private List<Process> processes;
         
         public Scheduler(int totalQuanta) {
-            //maxWaitPeriod = 3;
             create = true;
             processes = new ArrayList<Process>();
         }
-        
-        /*public int getLongestWait() {
-            return maxWaitPeriod;
-        }*/
         
         public boolean shouldCreateProcess() {
             return create;
