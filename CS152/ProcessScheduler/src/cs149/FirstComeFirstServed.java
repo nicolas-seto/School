@@ -24,10 +24,44 @@ public class FirstComeFirstServed implements Algorithm {
      * Runs FCFS algorithm.
      */
     public Map<String, Float> run() {
+        int counter = 0;
+        float turnaroundTime = 0, waitingTime = 0, reponseTime = 0;
+        List<Process> processesRan;
         /* TOTAL_QUANTA is the total running time, in this case 100 units */
         while (runTimeSum < TOTAL_QUANTA) {
+            Process aProcess = processes.get(counter);
+            float arrivalTime = aProcess.getArrivalTime();
+            float runTime = aProcess.getRunTime();
+            /* Must find the exact endTime because process can start in middle of quantum */
+            float endTime = arrivalTime + runTime;
             
+            if (counter == 0) {
+                /* First process is run. No waiting for it. */
+                runTimeSum = (int) Math.ceil(endTime);
+                turnaroundTime += runTime;
+            } else {
+                /* There's an idle period >= 0 between the last process and this
+                 * process. The process did not have to wait and fast response.
+                 */
+                if (arrivalTime >= (float) runTimeSum) {
+                    runTimeSum += ((int) Math.floor(arrivalTime) - runTimeSum) + (int) Math.ceil(endTime);
+                    turnaroundTime += runTime;
+                } else {
+                /* This process starts right after the end of the quantum of
+                 * the last process
+                 */
+                    runTimeSum += aProcess.getRunBlockSize();
+                }
+            }
+            counter++;
+            if (runTimeSum > TOTAL_QUANTA) {
+                processesRan = processes.subList(0, counter);
+            }
         }
         return new HashMap<String, Float>();
+    }
+    
+    private String listTimechart() {
+        return timechart.toString();
     }
 }
