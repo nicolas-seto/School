@@ -5,7 +5,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-public class FirstComeFirstServed implements Algorithm {
+public class ShortestJobFirst implements Algorithm {
     
     private List<Process> processes;
     private ProcessGenerator generator;
@@ -13,10 +13,7 @@ public class FirstComeFirstServed implements Algorithm {
     private StringBuilder timechart, timestamp;
     private static final int TOTAL_QUANTA = 100;
     
-    /**
-     * runTimeSum is the number of blocks that have been used so far.
-     */
-    public FirstComeFirstServed() {
+    public ShortestJobFirst() {
         generator = new ProcessGenerator(TOTAL_QUANTA);
         processes = generator.getProcesses();
         runTimeSum = 0;
@@ -26,7 +23,7 @@ public class FirstComeFirstServed implements Algorithm {
     }
     
     /**
-     * Runs FCFS algorithm.
+     * Runs SJF algorithm.
      */
     public Map<String, Float> run() {
         int counter = 0, idleBlocks = 0;
