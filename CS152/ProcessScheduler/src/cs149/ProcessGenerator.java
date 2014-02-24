@@ -4,9 +4,9 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Generates enough processes in the given quanta, where the CPU is never
- * idle for more than 2 consecutive quanta.
- * @author Home
+ * Generates enough processes in the given quanta when instantiated, 
+ * where the CPU is never idle for more than 2 consecutive quanta.
+ * @author Nic
  *
  */
 public class ProcessGenerator {
@@ -17,13 +17,11 @@ public class ProcessGenerator {
     
     public ProcessGenerator(int totalQuanta, long seed) {
         this.totalQuanta = totalQuanta;
-        name = 'a';
         generateProcesses(seed);
     }
     
     public ProcessGenerator(int totalQuanta) {
         this.totalQuanta = totalQuanta;
-        name = 'a';
         generateProcesses();
     }
     
@@ -57,6 +55,9 @@ public class ProcessGenerator {
         }
     }
     
+    /**
+     * List the processes.
+     */
     public void listProcesses() {
         int size = processes.size();
         System.out.printf("%d processes:\n", size);
@@ -66,6 +67,14 @@ public class ProcessGenerator {
                     current.getName(), current.getArrivalTime(), 
                     current.getRunTime(), current.getPriority());
         }
+    }
+    
+    /**
+     * Return the processes.
+     * @return the processes
+     */
+    public List<Process> getProcesses() {
+        return processes;
     }
     
     private class Scheduler {
