@@ -12,7 +12,7 @@ import java.util.List;
 public class ProcessGenerator {
     private int totalQuanta;
     private List<Process> processes;
-    private char name;
+    private char prefix;
     private Scheduler schedule;
     
     public ProcessGenerator(int totalQuanta, long seed) {
@@ -27,31 +27,44 @@ public class ProcessGenerator {
     
     public void generateProcesses(long seed) {
         schedule = new Scheduler(totalQuanta);
-        name = 'a';
+        prefix = 'a';
+        int iteration = 0;
         Process newProcess;
         
         while (schedule.shouldCreateProcess()) {
-            if (name == '{') {
-                name = 'A';
+            if (prefix == '{') {
+                prefix = 'A';
+            } else if (prefix == '[') {
+                ++iteration;
+                prefix = 'a';
             }
-            newProcess = new Process(name, seed);
+            newProcess = new Process(prefix + "" + iteration, seed);
             processes = schedule.addProcess(newProcess);
-            name++;
+            prefix++;
         }
     }
     
+    /**
+     * Generate a process via insertion sort. Check to see
+     * if there are gaps larger than 2 units based on arrival times of the
+     * processes. If there is, continue generating processes. If not, stop.
+     */
     public void generateProcesses() {
         schedule = new Scheduler(totalQuanta);
-        name = 'a';
+        prefix = 'a';
+        int iteration = 0;
         Process newProcess;
         
         while (schedule.shouldCreateProcess()) {
-            if (name == '{') {
-                name = 'A';
+            if (prefix == '{') {
+                prefix = 'A';
+            } else if (prefix == '[') {
+                ++iteration;
+                prefix = 'a';
             }
-            newProcess = new Process(name);
+            newProcess = new Process(prefix + "" + iteration);
             processes = schedule.addProcess(newProcess);
-            name++;
+            prefix++;
         }
     }
     
@@ -63,7 +76,7 @@ public class ProcessGenerator {
         System.out.printf("%d processes:\n", size);
         for (int i = 0; i < size; i++) {
             Process current = processes.get(i);
-            System.out.printf("%c: arrival=%.1f,runtime=%.1f,priority=%d\n", 
+            System.out.printf("%s: arrival=%.1f,runtime=%.1f,priority=%d\n", 
                     current.getName(), current.getArrivalTime(), 
                     current.getRunTime(), current.getPriority());
         }

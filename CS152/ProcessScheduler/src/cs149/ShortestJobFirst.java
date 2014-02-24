@@ -28,15 +28,15 @@ public class ShortestJobFirst implements Algorithm {
      * Runs SJF algorithm.
      */
     private Map<String, Float> run() {
-        int counter = 0, idleBlocks = 0;
+        int counter = 0, idleBlocks = 0, processesSize = processes.size();
         float turnaroundTime = 0, waitingTime = 0, responseTime = 0;
         List<Process> processesRan = new ArrayList<Process>();
         Map<String, Float> outputs = new HashMap<String, Float>();
         
         /* TOTAL_QUANTA is the total running time, in this case 100 units */
-        while (runTimeSum <= TOTAL_QUANTA) {
+        while (runTimeSum <= TOTAL_QUANTA && counter < processesSize) {
             Process aProcess = processes.get(counter);
-            char name = aProcess.getName();
+            String name = aProcess.getName();
             int processBlockSize = aProcess.getRunBlockSize();
             float arrivalTime = aProcess.getArrivalTime();
             float runTime = aProcess.getRunTime();
@@ -80,13 +80,13 @@ public class ShortestJobFirst implements Algorithm {
             
             /* Build timechart */
             for (int i = 0; i < idleBlocks; i++) {
-                timechart.append("[ ]");
+                timechart.append("[  ]");
                 
                 if (count % 10 == 0) {
-                    timestampSnippet = "0  ";
+                    timestampSnippet = "0   ";
                     
                 } else {
-                    timestampSnippet = "   ";
+                    timestampSnippet = "    ";
                 }
                 timestamp.append(timestampSnippet);
                 count++;
@@ -95,19 +95,23 @@ public class ShortestJobFirst implements Algorithm {
                 timechart.append("[" + name + "]");
                 
                 if (count % 10 == 0) {
-                    timestampSnippet = "0  ";
+                    timestampSnippet = "0   ";
                     
                 } else {
-                    timestampSnippet = "   ";
+                    timestampSnippet = "    ";
                 }
                 timestamp.append(timestampSnippet);
                 count++;
             }
-            /* Update order of processes after timechart is updated */
-            reorderReadyProcesses(counter, runTimeSum);
+            /* Update order of processes after timechart is updated. Don't run
+             * if the last process just ran.
+             */
+            if (counter != processesSize - 1) {
+                reorderReadyProcesses(counter, runTimeSum);
+            }
             
             counter++;
-            if (runTimeSum > TOTAL_QUANTA) {
+            if (runTimeSum > TOTAL_QUANTA || counter == processesSize) {
                 processesRan = processes.subList(0, counter);
                 break;
             }
@@ -125,6 +129,8 @@ public class ShortestJobFirst implements Algorithm {
         System.out.printf("Average Waiting Time: %.2f\n", outputs.get("avgWaiting"));
         System.out.printf("Average Response Time: %.2f\n", outputs.get("avgResponse"));
         System.out.printf("Throughput: %.2f\n\n", outputs.get("throughput"));
+        
+        //generator.listProcesses();
         
         return outputs;
     }

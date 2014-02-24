@@ -6,17 +6,17 @@ public class Process {
     private float arrivalTime, arrivalScale = 99.0f;
     private float runTime, runTimeScale = 9.9f, runTimeOffset = 0.1f;
     private int priority;
-    private char name;
+    private String name;
     private Random randGen = new Random();
 
-    public Process(char name, long seed)
+    public Process(String name, long seed)
     {
         this.name = name;
         randGen.setSeed(seed);
         generate();
     }
 
-    public Process(char name)
+    public Process(String name)
     {
         this.name = name;
         generate();
@@ -29,7 +29,7 @@ public class Process {
         priority = randGen.nextInt(4) + 1;
     }
     
-    public char getName() {
+    public String getName() {
         return name;
     }
 
@@ -47,5 +47,9 @@ public class Process {
     
     public int getRunBlockSize() {
         return (int) Math.ceil(runTime);
+    }
+    
+    public void updateRunTime(float runTime) {
+        this.runTime = runTime;
     }
 }
