@@ -42,15 +42,14 @@ public class ShortestJobFirst implements Algorithm {
             float runTime = aProcess.getRunTime();
             float currentWait = 0.0f;
             String timestampSnippet = "";
-            /* Must find the exact endTime because process can start in middle of quantum.
-             * This endTime is the assumption that the process can start right when
-             * it arrives.
+            /* This endTime is the assumption that the process starts at the end
+             * of a quantum if it arrives in the middle.
               */
             float endTime = (float) Math.ceil(arrivalTime) + runTime;
             
             if (counter == 0) {
-                /* First process is run. If the arrival is a decimal, there is
-                 * a wait for the next quantum to start; otherwise, there is 
+                /* First process is run. If the arrival is in the middle of a block, there is
+                 * the process starts at the next quantum; otherwise, there is 
                  * no wait. 
                  */
                 currentWait = (float) Math.ceil(arrivalTime) - arrivalTime;
@@ -128,7 +127,6 @@ public class ShortestJobFirst implements Algorithm {
         System.out.printf("Average Response Time: %.2f\n", outputs.get("avgResponse"));
         System.out.printf("Throughput: %.2f\n\n", outputs.get("throughput"));
         
-        //generator.listProcesses();
         listUsedProcesses(processesRan);
         
         return outputs;
@@ -157,9 +155,12 @@ public class ShortestJobFirst implements Algorithm {
         System.out.printf("%d processes:\n", size);
         for (int i = 0; i < size; i++) {
             Process current = processes.get(i);
-            System.out.printf("%s: arrival=%.1f,runtime=%.1f,priority=%d\n", 
+            System.out.printf("%s: arrival=%.2f,runtime=%.2f,priority=%d\n", 
                     current.getName(), current.getArrivalTime(), 
                     current.getRunTime(), current.getPriority());
+            if (i == size - 1) {
+                System.out.printf("\n");
+            }
         }
     }
     
@@ -178,7 +179,7 @@ public class ShortestJobFirst implements Algorithm {
             float runTime = aProcess.getRunTime();
             float arrivalTime = aProcess.getArrivalTime();
             
-            if (arrivalTime < blocksUsed) {
+            if (arrivalTime < (float) blocksUsed) {
                 if (runTime < minimum) {
                     minimum = runTime;
                     savedIndex = i;

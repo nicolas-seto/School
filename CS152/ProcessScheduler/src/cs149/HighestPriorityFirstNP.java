@@ -42,9 +42,8 @@ public class HighestPriorityFirstNP implements Algorithm {
             float runTime = aProcess.getRunTime();
             float currentWait = 0.0f;
             String timestampSnippet = "";
-            /* Must find the exact endTime because process can start in middle of quantum.
-             * This endTime is the assumption that the process can start right when
-             * it arrives.
+            /* This endTime is the assumption that the process starts at the end
+             * of a quantum if it arrives in the middle.
               */
             float endTime = (float) Math.ceil(arrivalTime) + runTime;
             
@@ -128,7 +127,6 @@ public class HighestPriorityFirstNP implements Algorithm {
         System.out.printf("Average Response Time: %.2f\n", outputs.get("avgResponse"));
         System.out.printf("Throughput: %.2f\n\n", outputs.get("throughput"));
         
-        //generator.listProcesses();
         listUsedProcesses(processesRan);
         
         return outputs;
@@ -157,9 +155,12 @@ public class HighestPriorityFirstNP implements Algorithm {
         System.out.printf("%d processes:\n", size);
         for (int i = 0; i < size; i++) {
             Process current = processes.get(i);
-            System.out.printf("%s: arrival=%.1f,runtime=%.1f,priority=%d\n", 
+            System.out.printf("%s: arrival=%.2f,runtime=%.2f,priority=%d\n", 
                     current.getName(), current.getArrivalTime(), 
                     current.getRunTime(), current.getPriority());
+            if (i == size - 1) {
+                System.out.printf("\n");
+            }
         }
     }
     
@@ -179,10 +180,22 @@ public class HighestPriorityFirstNP implements Algorithm {
             int priority = aProcess.getPriority();
             float arrivalTime = aProcess.getArrivalTime();
             
-            if (arrivalTime < blocksUsed) {
-                if (priority <= minimum && arrivalTime < minimumArrival) {
+            /* Check all the processes with an arrival time < number of blocks
+             * used.
+             */
+            if (arrivalTime < (float) blocksUsed) {
+                /* Priority is at least 4 or less */
+                if (priority <= minimum) {
+                    /* If priority of process is equal to current minimum, 
+                     * check to see if its arrival time is less than
+                     * the current saved earliest arrival time. If the priority is 
+                     * smaller than the current one, save the time regardless.
+                     */
+                    if ((priority == minimum && arrivalTime < minimumArrival) 
+                            || priority < minimum) {
+                        minimumArrival = arrivalTime;
+                    }
                     minimum = priority;
-                    minimumArrival = arrivalTime;
                     savedIndex = i;
                 }
             } else {

@@ -13,6 +13,7 @@ public class ShortestRemainingTime implements Algorithm {
     private StringBuilder timechart, timestamp;
     private Map<String, Float> runOutput;
     private static final int TOTAL_QUANTA = 100;
+    private float turnaroundTime, waitingTime, responseTime;
     
     public ShortestRemainingTime() {
         generator = new ProcessGenerator(TOTAL_QUANTA);
@@ -21,6 +22,7 @@ public class ShortestRemainingTime implements Algorithm {
         count = 0;
         timechart = new StringBuilder();
         timestamp = new StringBuilder();
+        turnaroundTime = waitingTime = responseTime = 0;
         runOutput = run();
     }
     
@@ -28,9 +30,7 @@ public class ShortestRemainingTime implements Algorithm {
      * Runs SRT algorithm.
      */
     private Map<String, Float> run() {
-        int counter = 0, index = 0, nextIndex = 0, idleBlocks = 0, 
-                startedSize = 0, processesSize = processes.size();
-        float turnaroundTime = 0, waitingTime = 0, responseTime = 0;
+        int index = 0, remainingTime = 0;
         List<Process> processesRan = new ArrayList<Process>();
         Map<String, Process> processesStarted = new HashMap<String, Process>();
         Map<String, Float> outputs = new HashMap<String, Float>();
@@ -63,18 +63,19 @@ public class ShortestRemainingTime implements Algorithm {
             /* The arrival time of the process was either before or equal to
              * the quantum. The process runs for one block.
              */
-                for (Map.Entry<String, Process> entry : processesStarted.entrySet())
-                {
+                for (Map.Entry<String, Process> entry : processesStarted.entrySet()) {
                     /* Need to have a Map to increment the wait times of every
                      * running process.
                      */
-                    if (!name.equals(entry.getKey())) {
-                        entry.setValue(entry.getValue().incrementWaitTimeBy(1.0f));
+                    String entryKey = entry.getKey();
+                    Process iteration = entry.getValue();
+                    if (!name.equals(entryKey)) {
+                        processesStarted.put(entryKey, iteration.incrementWaitTimeBy(1.0f));
                     } else {
                     /* Update the run time of the process. Update the process
                      * in the ArrayList. Reassign it to aProcess.
                      */
-                        entry.setValue(entry.getValue().decrementRunTimeBy(1.0f));
+                        processesStarted.put(entryKey, iteration.decrementRunTimeBy(1.0f));
                         processes.set(index, entry.getValue());
                         aProcess = processes.get(index);
                     }
@@ -106,98 +107,29 @@ public class ShortestRemainingTime implements Algorithm {
                 count++;
             }
             
+            /* When a process finishes, add it to the finished List, remove it from
+             * all the processes, and add the turnaround/waiting time of the process. 
+             */
             if (aProcess.getRunTimer() <= 0) {
                 processesRan.add(aProcess);
-                processes.remove(index);
+                processes.remove(index); // Remove from overall List
+                processesStarted.remove(name); // Remove from Map
                 turnaroundTime += aProcess.getRunTime() + aProcess.getWaitTime();
+                waitingTime += aProcess.getWaitTime();
             }
             
             runTimeSum++;
+            remainingTime = remainingRunTime(processesStarted);
             
+            if (remainingTime >= (TOTAL_QUANTA - runTimeSum)) {
+                // iterate through rest of Map
+                processesRan = runMap(processesRan, processesStarted);
+                break;
+            } else {
             /* See whether there is a new process that has arrival time 
              * <= runTimeSum 
              */
-        }
-        
-        /* TOTAL_QUANTA is the total running time, in this case 100 units */
-        while (runTimeSum <= TOTAL_QUANTA && counter < processesSize) {
-            Process aProcess = processes.get(counter);
-            String name = aProcess.getName();
-            int processBlockSize = aProcess.getRunBlockSize();
-            float arrivalTime = aProcess.getArrivalTime();
-            float runTime = aProcess.getRunTime();
-            float currentWait = 0.0f;
-            String timestampSnippet = "";
-            /* Must find the exact endTime because process can start in middle of quantum.
-             * This endTime is the assumption that the process can start right when
-             * it arrives.
-              */
-            float endTime = (float) Math.ceil(arrivalTime) + runTime;
-            
-            if (counter == 0) {
-                /* First process is run. If the arrival is a decimal, there is
-                 * a wait for the next quantum to start; otherwise, there is 
-                 * no wait. 
-                 */
-                currentWait = (float) Math.ceil(arrivalTime) - arrivalTime;
-                idleBlocks = (int) Math.ceil(arrivalTime);
-                runTimeSum = (int) Math.ceil(endTime);
-            } else {
-                /* There's an idle period >= 0 between the last process and this
-                 * process. The process may have to wait for next quantum to
-                 * start.
-                 */
-                if (arrivalTime >= (float) runTimeSum) {
-                    currentWait = (float) Math.ceil(arrivalTime) - arrivalTime;
-                    idleBlocks = (int) Math.ceil(arrivalTime) - runTimeSum;
-                    runTimeSum = (int) Math.ceil(endTime);
-                } else {
-                /* This process starts right after the end of the quantum of
-                 * the last process
-                 */
-                    runTimeSum += processBlockSize;
-                    currentWait = (float) runTimeSum - arrivalTime;
-                    idleBlocks = 0;
-                }
-            }
-            turnaroundTime += currentWait + runTime;
-            waitingTime += currentWait;
-            responseTime += currentWait;
-            
-            /* Build timechart */
-            for (int i = 0; i < idleBlocks; i++) {
-                timechart.append("[  ]");
-                
-                if (count % 10 == 0) {
-                    timestampSnippet = "0   ";
-                } else {
-                    timestampSnippet = "    ";
-                }
-                timestamp.append(timestampSnippet);
-                count++;
-            }
-            for (int i = 0; i < processBlockSize; i++) {
-                timechart.append("[" + name + "]");
-                
-                if (count % 10 == 0) {
-                    timestampSnippet = "0   ";
-                } else {
-                    timestampSnippet = "    ";
-                }
-                timestamp.append(timestampSnippet);
-                count++;
-            }
-            /* Update order of processes after timechart is updated. Don't run
-             * if the last process just ran.
-             */
-            if (counter != processesSize - 1) {
-                reorderReadyProcesses(counter, runTimeSum);
-            }
-            
-            counter++;
-            if (runTimeSum > TOTAL_QUANTA || counter == processesSize) {
-                processesRan = processes.subList(0, counter);
-                break;
+                reorderReadyProcesses(index, runTimeSum);
             }
         }
         
@@ -214,7 +146,72 @@ public class ShortestRemainingTime implements Algorithm {
         System.out.printf("Average Response Time: %.2f\n", outputs.get("avgResponse"));
         System.out.printf("Throughput: %.2f\n\n", outputs.get("throughput"));
         
+        listUsedProcesses(processesRan);
+        
         return outputs;
+    }
+    
+    /**
+     * Complete the remaining processes that have already started.
+     * @param processesRan the List of all the completed processes
+     * @param processesStarted the Map of the started processes
+     * @return
+     */
+    private List<Process> runMap(List<Process> processesRan, Map<String, Process> processesStarted) {
+        List<Process> completedProcesses = processesRan;
+        Map<String, Process> startedProcesses = processesStarted;
+        String name = "";
+        
+        while (!startedProcesses.isEmpty()) {
+            /* We get the process with the shortest amount of time remaining.
+             */
+            name = shortestTime(startedProcesses);
+            Process aProcess = startedProcesses.get(name);
+            String timestampSnippet = "";
+            
+            /* The arrival time of the process was either before or equal to
+             * the quantum. The process runs for one block.
+             */
+            for (Map.Entry<String, Process> entry : startedProcesses.entrySet())
+            {
+                /* Need to have a Map to increment the wait times of every
+                 * running process.
+                 */
+                String entryKey = entry.getKey();
+                Process iteration = entry.getValue();
+                if (!name.equals(entry.getKey())) {
+                    startedProcesses.put(entryKey, iteration.incrementWaitTimeBy(1.0f));
+                } else {
+                /* Update the run time of the process. Update the process
+                 * in the ArrayList. Reassign it to aProcess.
+                 */
+                    startedProcesses.put(entryKey, iteration.decrementRunTimeBy(1.0f));
+                    aProcess = startedProcesses.get(entryKey);
+                }
+            }
+            
+            timechart.append("[" + name + "]");
+            
+            if (count % 10 == 0) {
+                timestampSnippet = "0   ";
+            } else {
+                timestampSnippet = "    ";
+            }
+            timestamp.append(timestampSnippet);
+            count++;
+            
+            /* When a process finishes, add it to the finished List, remove it from
+             * all the processes, and add the turnaround/waiting time of the process. 
+             */
+            if (aProcess.getRunTimer() <= 0) {
+                completedProcesses.add(aProcess);
+                startedProcesses.remove(name); // Remove from Map
+                turnaroundTime += aProcess.getRunTime() + aProcess.getWaitTime();
+                waitingTime += aProcess.getWaitTime();
+            }
+        }
+        
+        return completedProcesses;
     }
     
     /**
@@ -233,6 +230,35 @@ public class ShortestRemainingTime implements Algorithm {
     }
     
     /**
+     * Calculate the sum of the run times and return it.
+     * @param startedProcesses the processes that have started already
+     * @return
+     */
+    private int remainingRunTime(Map<String, Process> startedProcesses) {
+        int time = 0;
+        for (Map.Entry<String, Process> entry : startedProcesses.entrySet())
+        {
+            time += (int) Math.ceil(entry.getValue().getRunTimer());
+        }
+        return time;
+    }
+    
+    private String shortestTime(Map<String, Process> startedProcesses) {
+        float minimum = 10.0f, time = 10.0f;
+        String name = "";
+        
+        for (Map.Entry<String, Process> entry : startedProcesses.entrySet()) {
+            time = entry.getValue().getRunTimer();
+            if (time < minimum) {
+                minimum = time;
+                name = entry.getValue().getName();
+            }
+        }
+        
+        return name;
+    }
+    
+    /**
      * List the used processes.
      */
     private void listUsedProcesses(List<Process> processes) {
@@ -240,9 +266,12 @@ public class ShortestRemainingTime implements Algorithm {
         System.out.printf("%d processes:\n", size);
         for (int i = 0; i < size; i++) {
             Process current = processes.get(i);
-            System.out.printf("%s: arrival=%.1f,runtime=%.1f,priority=%d\n", 
+            System.out.printf("%s: arrival=%.2f,runtime=%.2f,priority=%d\n", 
                     current.getName(), current.getArrivalTime(), 
                     current.getRunTime(), current.getPriority());
+            if (i == size - 1) {
+                System.out.printf("\n");
+            }
         }
     }
     
@@ -253,7 +282,7 @@ public class ShortestRemainingTime implements Algorithm {
      * @param blocksUsed the number of blocks that have been used
      */
     private void reorderReadyProcesses(int index, int blocksUsed) {
-        int start = index + 1, size = processes.size(), savedIndex = start;
+        int start = index, size = processes.size(), savedIndex = start;
         float minimum = 10;
         
         for (int i = start; i < size; i++) {
@@ -261,7 +290,7 @@ public class ShortestRemainingTime implements Algorithm {
             float runTime = aProcess.getRunTime();
             float arrivalTime = aProcess.getArrivalTime();
             
-            if (arrivalTime < blocksUsed) {
+            if (arrivalTime < (float) blocksUsed) {
                 if (runTime < minimum) {
                     minimum = runTime;
                     savedIndex = i;
