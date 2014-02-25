@@ -53,6 +53,10 @@ public class Process {
         return waitTime;
     }
     
+    public void increasePriority() {
+        priority--;
+    }
+    
     public int getPriority() {
         return priority;
     }
@@ -62,7 +66,11 @@ public class Process {
     }
     
     public int decrementAge() {
-        return --age;
+        if (age > 5) {
+            return --age;
+        } else {
+            return 0;
+        }
     }
     
     public Process decrementRunTimeBy(float runTime) {

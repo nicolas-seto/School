@@ -5,7 +5,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-public class ShortestRemainingTime implements Algorithm {
+public class RoundRobin implements Algorithm {
     
     private List<Process> processes;
     private ProcessGenerator generator;
@@ -15,7 +15,7 @@ public class ShortestRemainingTime implements Algorithm {
     private static final int TOTAL_QUANTA = 100;
     private float turnaroundTime, waitingTime, responseTime;
     
-    public ShortestRemainingTime() {
+    public RoundRobin() {
         generator = new ProcessGenerator(TOTAL_QUANTA);
         processes = generator.getProcesses();
         runTimeSum = 0;
@@ -30,12 +30,13 @@ public class ShortestRemainingTime implements Algorithm {
      * Runs SRT algorithm.
      */
     private Map<String, Float> run() {
-        int index = 0, remainingTime = 0;
+        int index = 0;
         List<Process> processesRan = new ArrayList<Process>();
         Map<String, Process> processesStarted = new HashMap<String, Process>();
         Map<String, Float> outputs = new HashMap<String, Float>();
+        processes = subListProcesses(processes, TOTAL_QUANTA);
         
-        for (int i = 0; i < TOTAL_QUANTA; i++) {
+        while (!processes.isEmpty()) {
             /* We assume this process is the next process that will be run for
              * sure. Take care of the selection at the end of the loop. First 
              * process is the process with the earliest arrival time.
@@ -105,27 +106,22 @@ public class ShortestRemainingTime implements Algorithm {
             }
             
             /* When a process finishes, add it to the finished List, remove it from
-             * all the processes, and add the turnaround/waiting time of the process. 
+             * the list of running processes, and add the turnaround/waiting time of the process. 
              */
             if (aProcess.getRunTimer() <= 0) {
                 processesRan.add(aProcess);
-                processes.remove(index); // Remove from overall List
+                processes.remove(index);
                 processesStarted.remove(name); // Remove from Map
                 turnaroundTime += aProcess.getRunTime() + aProcess.getWaitTime();
                 waitingTime += aProcess.getWaitTime();
             }
             
             runTimeSum++;
-            remainingTime = remainingRunTime(processesStarted);
             
-            if (remainingTime >= (TOTAL_QUANTA - runTimeSum)) {
-                // iterate through rest of Map
-                processesRan = runMap(processesRan, processesStarted);
-                break;
-            } else {
             /* See whether there is a new process that has arrival time 
              * <= runTimeSum 
              */
+            if (processes.size() > 1) {
                 reorderReadyProcesses(index, runTimeSum);
             }
         }
@@ -149,65 +145,20 @@ public class ShortestRemainingTime implements Algorithm {
     }
     
     /**
-     * Complete the remaining processes that have already started.
-     * @param processesRan the List of all the completed processes
-     * @param processesStarted the Map of the started processes
-     * @return
+     * Grab enough processes to run within TOTAL_QUANTA.
+     * @param allProcesses the List with all the generated processes
+     * @return the subList
      */
-    private List<Process> runMap(List<Process> processesRan, Map<String, Process> processesStarted) {
-        List<Process> completedProcesses = processesRan;
-        Map<String, Process> startedProcesses = processesStarted;
-        String name = "";
+    private List<Process> subListProcesses(List<Process> allProcesses, int quanta) {
+        int sum = 0, i = 0, size = allProcesses.size();
         
-        while (!startedProcesses.isEmpty()) {
-            /* We get the process with the shortest amount of time remaining.
-             */
-            name = shortestTime(startedProcesses);
-            Process aProcess = startedProcesses.get(name);
-            String timestampSnippet = "";
-            
-            /* The arrival time of the process was either before or equal to
-             * the quantum. The process runs for one block.
-             */
-            for (Map.Entry<String, Process> entry : startedProcesses.entrySet())
-            {
-                /* Need to have a Map to increment the wait times of every
-                 * running process.
-                 */
-                String entryKey = entry.getKey();
-                Process iteration = entry.getValue();
-                if (!name.equals(entry.getKey())) {
-                    startedProcesses.put(entryKey, iteration.incrementWaitTimeBy(1.0f));
-                } else {
-                /* Update the run time of the process. Reassign it to aProcess.
-                 */
-                    startedProcesses.put(entryKey, iteration.decrementRunTimeBy(1.0f));
-                    aProcess = startedProcesses.get(entryKey);
-                }
-            }
-            
-            timechart.append("[" + name + "]");
-            
-            if (count % 10 == 0) {
-                timestampSnippet = "0   ";
-            } else {
-                timestampSnippet = "    ";
-            }
-            timestamp.append(timestampSnippet);
-            count++;
-            
-            /* When a process finishes, add it to the finished List, remove it from
-             * all the Map, and add the turnaround/waiting time of the process. 
-             */
-            if (aProcess.getRunTimer() <= 0) {
-                completedProcesses.add(aProcess);
-                startedProcesses.remove(name); // Remove from Map
-                turnaroundTime += aProcess.getRunTime() + aProcess.getWaitTime();
-                waitingTime += aProcess.getWaitTime();
-            }
+        while (sum < quanta && i < size) {
+            Process aProcess = allProcesses.get(i);
+            sum += aProcess.getRunTime();
+            i++;
         }
         
-        return completedProcesses;
+        return allProcesses.subList(0, i);
     }
     
     /**
@@ -223,35 +174,6 @@ public class ShortestRemainingTime implements Algorithm {
     
     private String listTimestamp() {
         return timestamp.toString();
-    }
-    
-    /**
-     * Calculate the sum of the run times and return it.
-     * @param startedProcesses the processes that have started already
-     * @return
-     */
-    private int remainingRunTime(Map<String, Process> startedProcesses) {
-        int time = 0;
-        for (Map.Entry<String, Process> entry : startedProcesses.entrySet())
-        {
-            time += (int) Math.ceil(entry.getValue().getRunTimer());
-        }
-        return time;
-    }
-    
-    private String shortestTime(Map<String, Process> startedProcesses) {
-        float minimum = 10.0f, time = 10.0f;
-        String name = "";
-        
-        for (Map.Entry<String, Process> entry : startedProcesses.entrySet()) {
-            time = entry.getValue().getRunTimer();
-            if (time < minimum) {
-                minimum = time;
-                name = entry.getValue().getName();
-            }
-        }
-        
-        return name;
     }
     
     /**
@@ -278,25 +200,10 @@ public class ShortestRemainingTime implements Algorithm {
      * @param blocksUsed the number of blocks that have been used
      */
     private void reorderReadyProcesses(int index, int blocksUsed) {
-        int start = index, size = processes.size(), savedIndex = start;
-        float minimum = 10;
+        int start = index;
         
-        for (int i = start; i < size; i++) {
-            Process aProcess = processes.get(i);
-            float runTime = aProcess.getRunTime();
-            float arrivalTime = aProcess.getArrivalTime();
-            
-            if (arrivalTime < (float) blocksUsed) {
-                if (runTime < minimum) {
-                    minimum = runTime;
-                    savedIndex = i;
-                }
-            } else {
-                break;
-            }
+        if (processes.get(start + 1).getArrivalTime() <= (float) runTimeSum) {
+            processes.add(processes.remove(start));
         }
-        
-        Process savedProcess = processes.remove(savedIndex);
-        processes.add(start, savedProcess);
     }
 }

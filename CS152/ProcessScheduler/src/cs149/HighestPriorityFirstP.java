@@ -70,7 +70,16 @@ public class HighestPriorityFirstP implements Algorithm {
                     String entryKey = entry.getKey();
                     Process iteration = entry.getValue();
                     if (!name.equals(entryKey)) {
-                        processesStarted.put(entryKey, iteration.incrementWaitTimeBy(1.0f));
+                        /* Increase wait time for a process by 1 unit. Decrease
+                         * the age. If the age reaches a multiple of 5, increase
+                         * priority.
+                         */
+                        iteration.incrementWaitTimeBy(1.0f);
+                        int newAge = iteration.decrementAge();
+                        if (newAge % 5 == 0 && newAge / 5 >= 1) {
+                            iteration.increasePriority();
+                        }
+                        processesStarted.put(entryKey, iteration);
                     } else {
                     /* Update the run time of the process. Update the process
                      * in the ArrayList. Reassign it to aProcess.
@@ -123,8 +132,7 @@ public class HighestPriorityFirstP implements Algorithm {
                 processesRan = runMap(processesRan, processesStarted);
                 break;
             } else {
-            /* See whether there is a new process that has arrival time 
-             * <= runTimeSum 
+            /* See whether there is a new process that has higher priority.
              */
                 reorderReadyProcesses(index, runTimeSum);
             }
@@ -160,9 +168,9 @@ public class HighestPriorityFirstP implements Algorithm {
         String name = "";
         
         while (!startedProcesses.isEmpty()) {
-            /* We get the process with the shortest amount of time remaining.
+            /* We get the process with the highest priorities.
              */
-            name = shortestTime(startedProcesses);
+            name = highestPriority(startedProcesses);
             Process aProcess = startedProcesses.get(name);
             String timestampSnippet = "";
             
@@ -177,10 +185,18 @@ public class HighestPriorityFirstP implements Algorithm {
                 String entryKey = entry.getKey();
                 Process iteration = entry.getValue();
                 if (!name.equals(entry.getKey())) {
-                    startedProcesses.put(entryKey, iteration.incrementWaitTimeBy(1.0f));
+                    /* Increase wait time for a process by 1 unit. Decrease
+                     * the age. If the age reaches a multiple of 5, increase
+                     * priority.
+                     */
+                    iteration.incrementWaitTimeBy(1.0f);
+                    int newAge = iteration.decrementAge();
+                    if (newAge % 5 == 0 && newAge / 5 >= 1) {
+                        iteration.increasePriority();
+                    }
+                    processesStarted.put(entryKey, iteration);
                 } else {
-                /* Update the run time of the process. Update the process
-                 * in the ArrayList. Reassign it to aProcess.
+                /* Update the run time of the process. Reassign it to aProcess.
                  */
                     startedProcesses.put(entryKey, iteration.decrementRunTimeBy(1.0f));
                     aProcess = startedProcesses.get(entryKey);
@@ -240,14 +256,26 @@ public class HighestPriorityFirstP implements Algorithm {
         return time;
     }
     
-    private String shortestTime(Map<String, Process> startedProcesses) {
-        float minimum = 10.0f, time = 10.0f;
+    private String highestPriority(Map<String, Process> startedProcesses) {
+        float minimumArrival = 10.0f, arrivalTime = 10.0f;
+        int minimum = 5, priority = 0;
         String name = "";
         
         for (Map.Entry<String, Process> entry : startedProcesses.entrySet()) {
-            time = entry.getValue().getRunTimer();
-            if (time < minimum) {
-                minimum = time;
+            priority = entry.getValue().getPriority();
+            arrivalTime = entry.getValue().getArrivalTime();
+            /* Priority is at least 4 or less */
+            if (priority <= minimum) {
+                /* If priority of process is equal to current minimum, 
+                 * check to see if its arrival time is less than
+                 * the current saved earliest arrival time. If the priority is 
+                 * smaller than the current one, save the time regardless.
+                 */
+                if ((priority == minimum && arrivalTime < minimumArrival) 
+                        || priority < minimum) {
+                    minimumArrival = arrivalTime;
+                }
+                minimum = priority;
                 name = entry.getValue().getName();
             }
         }
@@ -273,23 +301,37 @@ public class HighestPriorityFirstP implements Algorithm {
     }
     
     /**
-     * Finds processes that are ready and reorders them based on estimated
-     * run time.
+     * Finds processes that are ready and moves the process with the highest
+     * priority and earliest arrival time to the front of List.
      * @param index the index of the process that just ran
      * @param blocksUsed the number of blocks that have been used
      */
     private void reorderReadyProcesses(int index, int blocksUsed) {
         int start = index, size = processes.size(), savedIndex = start;
-        float minimum = 10;
+        int minimum = 5;
+        float minimumArrival = 100.0f;
         
         for (int i = start; i < size; i++) {
             Process aProcess = processes.get(i);
-            float runTime = aProcess.getRunTime();
+            int priority = aProcess.getPriority();
             float arrivalTime = aProcess.getArrivalTime();
             
+            /* Check all the processes with an arrival time < number of blocks
+             * used.
+             */
             if (arrivalTime < (float) blocksUsed) {
-                if (runTime < minimum) {
-                    minimum = runTime;
+                /* Priority is at least 4 or less */
+                if (priority <= minimum) {
+                    /* If priority of process is equal to current minimum, 
+                     * check to see if its arrival time is less than
+                     * the current saved earliest arrival time. If the priority is 
+                     * smaller than the current one, save the time regardless.
+                     */
+                    if ((priority == minimum && arrivalTime < minimumArrival) 
+                            || priority < minimum) {
+                        minimumArrival = arrivalTime;
+                    }
+                    minimum = priority;
                     savedIndex = i;
                 }
             } else {

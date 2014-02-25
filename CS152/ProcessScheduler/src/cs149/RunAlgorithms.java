@@ -17,5 +17,11 @@ public class RunAlgorithms {
         
         System.out.println("SRT Run1\n");
         ShortestRemainingTime algorithm4 = new ShortestRemainingTime();
+        
+        System.out.println("HPF-P Run1\n");
+        HighestPriorityFirstP algorithm5 = new HighestPriorityFirstP();
+        
+        System.out.println("RR Run1\n");
+        RoundRobin algorithm6 = new RoundRobin();
     }
 }
