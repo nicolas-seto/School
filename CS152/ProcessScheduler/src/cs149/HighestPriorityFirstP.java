@@ -5,7 +5,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-public class ShortestRemainingTime implements Algorithm {
+public class HighestPriorityFirstP implements Algorithm {
     
     private List<Process> processes;
     private ProcessGenerator generator;
@@ -15,7 +15,7 @@ public class ShortestRemainingTime implements Algorithm {
     private static final int TOTAL_QUANTA = 100;
     private float turnaroundTime, waitingTime, responseTime;
     
-    public ShortestRemainingTime() {
+    public HighestPriorityFirstP() {
         generator = new ProcessGenerator(TOTAL_QUANTA);
         processes = generator.getProcesses();
         runTimeSum = 0;

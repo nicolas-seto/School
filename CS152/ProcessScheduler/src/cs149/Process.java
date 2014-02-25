@@ -5,7 +5,7 @@ import java.util.Random;
 public class Process {
     private float arrivalTime, arrivalScale = 99.0f;
     private float runTime, runTimer, waitTime, runTimeScale = 9.9f, runTimeOffset = 0.1f;
-    private int priority;
+    private int priority, age;
     private String name;
     private Random randGen = new Random();
 
@@ -14,6 +14,7 @@ public class Process {
         this.name = name;
         randGen.setSeed(seed);
         waitTime = 0;
+        age = 20;
         generate();
     }
 
@@ -58,6 +59,10 @@ public class Process {
     
     public int getRunBlockSize() {
         return (int) Math.ceil(runTime);
+    }
+    
+    public int decrementAge() {
+        return --age;
     }
     
     public Process decrementRunTimeBy(float runTime) {
