@@ -4,7 +4,7 @@ import java.util.Random;
 
 public class Process {
     private float arrivalTime, arrivalScale = 99.0f;
-    private float runTime, waitTime, runTimeScale = 9.9f, runTimeOffset = 0.1f;
+    private float runTime, runTimer, waitTime, runTimeScale = 9.9f, runTimeOffset = 0.1f;
     private int priority;
     private String name;
     private Random randGen = new Random();
@@ -28,6 +28,7 @@ public class Process {
     {
         arrivalTime = randGen.nextFloat() * arrivalScale;
         runTime = (randGen.nextFloat() * runTimeScale) + runTimeOffset;
+        runTimer = runTime;
         priority = randGen.nextInt(4) + 1;
     }
     
@@ -43,6 +44,14 @@ public class Process {
         return runTime;
     }
     
+    public float getRunTimer() {
+        return runTimer;
+    }
+    
+    public float getWaitTime() {
+        return waitTime;
+    }
+    
     public int getPriority() {
         return priority;
     }
@@ -51,11 +60,13 @@ public class Process {
         return (int) Math.ceil(runTime);
     }
     
-    public void updateRunTime(float runTime) {
-        this.runTime = runTime;
+    public Process decrementRunTimeBy(float runTime) {
+        this.runTimer -= runTime;
+        return this;
     }
     
-    public void updateWaitTime(float waitTime) {
-        this.waitTime = waitTime;
+    public Process incrementWaitTimeBy(float waitTime) {
+        this.waitTime += waitTime;
+        return this;
     }
 }

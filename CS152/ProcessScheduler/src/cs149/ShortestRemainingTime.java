@@ -28,9 +28,11 @@ public class ShortestRemainingTime implements Algorithm {
      * Runs SRT algorithm.
      */
     private Map<String, Float> run() {
-        int counter = 0, index = 0, nextIndex = 0, idleBlocks = 0, processesSize = processes.size();
+        int counter = 0, index = 0, nextIndex = 0, idleBlocks = 0, 
+                startedSize = 0, processesSize = processes.size();
         float turnaroundTime = 0, waitingTime = 0, responseTime = 0;
         List<Process> processesRan = new ArrayList<Process>();
+        Map<String, Process> processesStarted = new HashMap<String, Process>();
         Map<String, Float> outputs = new HashMap<String, Float>();
         
         for (int i = 0; i < TOTAL_QUANTA; i++) {
@@ -40,32 +42,81 @@ public class ShortestRemainingTime implements Algorithm {
              */
             Process aProcess = processes.get(index);
             String name = aProcess.getName();
-            int processBlockSize = aProcess.getRunBlockSize();
             float arrivalTime = aProcess.getArrivalTime();
-            float runTime = aProcess.getRunTime();
             float currentWait = 0.0f;
             String timestampSnippet = "";
             
             /* There is a block of idleness */
             if ((float) runTimeSum < arrivalTime) {
                 
-                
-                
                 timechart.append("[  ]");
                 
                 if (count % 10 == 0) {
                     timestampSnippet = "0   ";
-                    
                 } else {
                     timestampSnippet = "    ";
                 }
                 timestamp.append(timestampSnippet);
                 count++;
-            } else {
                 
+            } else {
+            /* The arrival time of the process was either before or equal to
+             * the quantum. The process runs for one block.
+             */
+                for (Map.Entry<String, Process> entry : processesStarted.entrySet())
+                {
+                    /* Need to have a Map to increment the wait times of every
+                     * running process.
+                     */
+                    if (!name.equals(entry.getKey())) {
+                        entry.setValue(entry.getValue().incrementWaitTimeBy(1.0f));
+                    } else {
+                    /* Update the run time of the process. Update the process
+                     * in the ArrayList. Reassign it to aProcess.
+                     */
+                        entry.setValue(entry.getValue().decrementRunTimeBy(1.0f));
+                        processes.set(index, entry.getValue());
+                        aProcess = processes.get(index);
+                    }
+                }
+                
+                /* Very first time process is run */
+                if (!processesStarted.containsKey(name)) {
+                    
+                    currentWait = (float) runTimeSum - arrivalTime;
+                    responseTime += currentWait;
+                    aProcess.incrementWaitTimeBy(currentWait);
+                    aProcess.getRunTimer();
+                    aProcess.decrementRunTimeBy(1);
+                    //Check to see later that increment/decrement works
+                    aProcess.getRunTimer();
+                    processesStarted.put(name, aProcess);
+                    processes.set(index, aProcess);
+                    
+                }
+                
+                timechart.append("[" + name + "]");
+                
+                if (count % 10 == 0) {
+                    timestampSnippet = "0   ";
+                } else {
+                    timestampSnippet = "    ";
+                }
+                timestamp.append(timestampSnippet);
+                count++;
+            }
+            
+            if (aProcess.getRunTimer() <= 0) {
+                processesRan.add(aProcess);
+                processes.remove(index);
+                turnaroundTime += aProcess.getRunTime() + aProcess.getWaitTime();
             }
             
             runTimeSum++;
+            
+            /* See whether there is a new process that has arrival time 
+             * <= runTimeSum 
+             */
         }
         
         /* TOTAL_QUANTA is the total running time, in this case 100 units */
@@ -119,7 +170,6 @@ public class ShortestRemainingTime implements Algorithm {
                 
                 if (count % 10 == 0) {
                     timestampSnippet = "0   ";
-                    
                 } else {
                     timestampSnippet = "    ";
                 }
@@ -131,7 +181,6 @@ public class ShortestRemainingTime implements Algorithm {
                 
                 if (count % 10 == 0) {
                     timestampSnippet = "0   ";
-                    
                 } else {
                     timestampSnippet = "    ";
                 }
