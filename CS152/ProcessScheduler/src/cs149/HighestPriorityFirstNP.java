@@ -5,7 +5,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-public class FirstComeFirstServed implements Algorithm {
+public class HighestPriorityFirstNP implements Algorithm {
     
     private List<Process> processes;
     private ProcessGenerator generator;
@@ -14,10 +14,7 @@ public class FirstComeFirstServed implements Algorithm {
     private Map<String, Float> runOutput;
     private static final int TOTAL_QUANTA = 100;
     
-    /**
-     * runTimeSum is the number of blocks that have been used so far.
-     */
-    public FirstComeFirstServed() {
+    public HighestPriorityFirstNP() {
         generator = new ProcessGenerator(TOTAL_QUANTA);
         processes = generator.getProcesses();
         runTimeSum = 0;
@@ -28,7 +25,7 @@ public class FirstComeFirstServed implements Algorithm {
     }
     
     /**
-     * Runs FCFS algorithm.
+     * Runs SJF algorithm.
      */
     private Map<String, Float> run() {
         int counter = 0, idleBlocks = 0, processesSize = processes.size();
@@ -104,6 +101,12 @@ public class FirstComeFirstServed implements Algorithm {
                 timestamp.append(timestampSnippet);
                 count++;
             }
+            /* Update order of processes after timechart is updated. Don't run
+             * if the last process just ran.
+             */
+            if (counter != processesSize - 1) {
+                reorderReadyProcesses(counter, runTimeSum);
+            }
             
             counter++;
             if (runTimeSum > TOTAL_QUANTA || counter == processesSize) {
@@ -158,5 +161,36 @@ public class FirstComeFirstServed implements Algorithm {
                     current.getName(), current.getArrivalTime(), 
                     current.getRunTime(), current.getPriority());
         }
+    }
+    
+    /**
+     * Finds processes that are ready and reorders them based on estimated
+     * run time.
+     * @param index the index of the process that just ran
+     * @param blocksUsed the number of blocks that have been used
+     */
+    private void reorderReadyProcesses(int index, int blocksUsed) {
+        int start = index + 1, size = processes.size(), savedIndex = start;
+        int minimum = 5;
+        float minimumArrival = 100.0f;
+        
+        for (int i = start; i < size; i++) {
+            Process aProcess = processes.get(i);
+            int priority = aProcess.getPriority();
+            float arrivalTime = aProcess.getArrivalTime();
+            
+            if (arrivalTime < blocksUsed) {
+                if (priority <= minimum && arrivalTime < minimumArrival) {
+                    minimum = priority;
+                    minimumArrival = arrivalTime;
+                    savedIndex = i;
+                }
+            } else {
+                break;
+            }
+        }
+        
+        Process savedProcess = processes.remove(savedIndex);
+        processes.add(start, savedProcess);
     }
 }

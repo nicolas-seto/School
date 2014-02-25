@@ -57,11 +57,11 @@ public class ShortestJobFirst implements Algorithm {
                 idleBlocks = (int) Math.ceil(arrivalTime);
                 runTimeSum = (int) Math.ceil(endTime);
             } else {
-                /* There's an idle period >= 0 between the last process and this
+                /* There's an idle period > 0 between the last process and this
                  * process. The process may have to wait for next quantum to
                  * start.
                  */
-                if (arrivalTime >= (float) runTimeSum) {
+                if (arrivalTime > (float) runTimeSum) {
                     currentWait = (float) Math.ceil(arrivalTime) - arrivalTime;
                     idleBlocks = (int) Math.ceil(arrivalTime) - runTimeSum;
                     runTimeSum = (int) Math.ceil(endTime);
@@ -84,7 +84,6 @@ public class ShortestJobFirst implements Algorithm {
                 
                 if (count % 10 == 0) {
                     timestampSnippet = "0   ";
-                    
                 } else {
                     timestampSnippet = "    ";
                 }
@@ -96,7 +95,6 @@ public class ShortestJobFirst implements Algorithm {
                 
                 if (count % 10 == 0) {
                     timestampSnippet = "0   ";
-                    
                 } else {
                     timestampSnippet = "    ";
                 }
@@ -131,6 +129,7 @@ public class ShortestJobFirst implements Algorithm {
         System.out.printf("Throughput: %.2f\n\n", outputs.get("throughput"));
         
         //generator.listProcesses();
+        listUsedProcesses(processesRan);
         
         return outputs;
     }
@@ -148,6 +147,20 @@ public class ShortestJobFirst implements Algorithm {
     
     private String listTimestamp() {
         return timestamp.toString();
+    }
+    
+    /**
+     * List the used processes.
+     */
+    private void listUsedProcesses(List<Process> processes) {
+        int size = processes.size();
+        System.out.printf("%d processes:\n", size);
+        for (int i = 0; i < size; i++) {
+            Process current = processes.get(i);
+            System.out.printf("%s: arrival=%.1f,runtime=%.1f,priority=%d\n", 
+                    current.getName(), current.getArrivalTime(), 
+                    current.getRunTime(), current.getPriority());
+        }
     }
     
     /**
@@ -175,8 +188,7 @@ public class ShortestJobFirst implements Algorithm {
             }
         }
         
-        Process savedProcess = processes.get(savedIndex);
-        processes.remove(savedIndex);
+        Process savedProcess = processes.remove(savedIndex);
         processes.add(start, savedProcess);
     }
 }

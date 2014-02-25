@@ -25,13 +25,48 @@ public class ShortestRemainingTime implements Algorithm {
     }
     
     /**
-     * Runs SJF algorithm.
+     * Runs SRT algorithm.
      */
     private Map<String, Float> run() {
-        int counter = 0, idleBlocks = 0, processesSize = processes.size();
+        int counter = 0, index = 0, nextIndex = 0, idleBlocks = 0, processesSize = processes.size();
         float turnaroundTime = 0, waitingTime = 0, responseTime = 0;
         List<Process> processesRan = new ArrayList<Process>();
         Map<String, Float> outputs = new HashMap<String, Float>();
+        
+        for (int i = 0; i < TOTAL_QUANTA; i++) {
+            /* We assume this process is the next process that will be run for
+             * sure. Take care of the selection at the end of the loop. First 
+             * process is the process with the earliest arrival time.
+             */
+            Process aProcess = processes.get(index);
+            String name = aProcess.getName();
+            int processBlockSize = aProcess.getRunBlockSize();
+            float arrivalTime = aProcess.getArrivalTime();
+            float runTime = aProcess.getRunTime();
+            float currentWait = 0.0f;
+            String timestampSnippet = "";
+            
+            /* There is a block of idleness */
+            if ((float) runTimeSum < arrivalTime) {
+                
+                
+                
+                timechart.append("[  ]");
+                
+                if (count % 10 == 0) {
+                    timestampSnippet = "0   ";
+                    
+                } else {
+                    timestampSnippet = "    ";
+                }
+                timestamp.append(timestampSnippet);
+                count++;
+            } else {
+                
+            }
+            
+            runTimeSum++;
+        }
         
         /* TOTAL_QUANTA is the total running time, in this case 100 units */
         while (runTimeSum <= TOTAL_QUANTA && counter < processesSize) {
@@ -149,6 +184,20 @@ public class ShortestRemainingTime implements Algorithm {
     }
     
     /**
+     * List the used processes.
+     */
+    private void listUsedProcesses(List<Process> processes) {
+        int size = processes.size();
+        System.out.printf("%d processes:\n", size);
+        for (int i = 0; i < size; i++) {
+            Process current = processes.get(i);
+            System.out.printf("%s: arrival=%.1f,runtime=%.1f,priority=%d\n", 
+                    current.getName(), current.getArrivalTime(), 
+                    current.getRunTime(), current.getPriority());
+        }
+    }
+    
+    /**
      * Finds processes that are ready and reorders them based on estimated
      * run time.
      * @param index the index of the process that just ran
@@ -173,8 +222,7 @@ public class ShortestRemainingTime implements Algorithm {
             }
         }
         
-        Process savedProcess = processes.get(savedIndex);
-        processes.remove(savedIndex);
+        Process savedProcess = processes.remove(savedIndex);
         processes.add(start, savedProcess);
     }
 }

@@ -11,5 +11,8 @@ public class RunAlgorithms {
         System.out.println("SJF Run1");
         ShortestJobFirst algorithm2 = new ShortestJobFirst();
         //Map<String, Float> output2 = algorithm2.getOutput();
+        
+        System.out.println("HPF-NP Run1");
+        HighestPriorityFirstNP algorithm3 = new HighestPriorityFirstNP();
     }
 }
