@@ -25,6 +25,7 @@ char* joinQueue(int sellerIndex);
 void sellTicket(int sellerId);
 void seatCustomer(char* customer);
 void print(char* event);
+void printSeats();
 int randomRange(int min, int max);
 
 char*** seats; // 2d array that holds customer names.
@@ -140,6 +141,32 @@ void print(char *event)
     pthread_mutex_unlock(&printMutex);
 }
 
+void printSeats()
+{
+    int i, j;
+    // Acquire the mutex lock to protect the printing.
+    pthread_mutex_lock(&printMutex);
+
+    for (i = 0; i < ROWS; i++) {
+        for (j = 0; j < COLS; j++) {
+            if (j == 0) {
+                printf("|");
+            }
+            if (strcmp(seats[i][j], "") != 0) {
+                printf(" %s |", seats[i][j]);
+            } else {
+                printf(" ---- |");
+            }
+            if (j == COLS - 1) {
+                printf("\n");
+            }
+        }
+    }
+
+    // Release the mutex lock.
+    pthread_mutex_unlock(&printMutex);
+}
+
 // The customer thread passed with id of seller.
 void *customer(void *param) {
     time_t start, now;
@@ -163,7 +190,7 @@ void *customer(void *param) {
 
     if (!outcome) { // Customer has not been seated because the wait has been 10 minutes or time is up.
         queues[id][queueNum] = "1";
-        pthread_mutex_unlock(&queueMutex);
+        pthread_mutex_unlock(&queueMutex); // Unlock so other sellers can continue processing queue. 
         pthread_mutex_lock(&leaveMutex);
         leaveCount++;
         pthread_mutex_unlock(&leaveMutex);
@@ -246,7 +273,7 @@ void sellTicket(int sellerId) {
     if (strcmp(customer, "") != 0) { // Do something if there is a customer in the queue.
         if (strcmp(customer, "1") != 0) { // If the string is not 1, then the customer has not left already.
             queues[sellerId][index] = "1"; // Let customer know it's being processed.
-            pthread_mutex_unlock(&queueMutex);
+            pthread_mutex_unlock(&queueMutex); // Unlock because customer will know it has been processed.
             pthread_mutex_lock(&seatsMutex); // Lock before seatsTaken can be incremented by another seller.
 
             if (seatsTaken < (ROWS * COLS)) { // There are seats open.
@@ -259,9 +286,11 @@ void sellTicket(int sellerId) {
                 } else {
                     sleep(randomRange(4, 7));
                 }
-                pthread_mutex_lock(&seatsMutex);
+                pthread_mutex_lock(&seatsMutex); // Those who sleep less will be able to seat customers first.
                 seatCustomer(customer);
                 pthread_mutex_unlock(&seatsMutex);
+
+                printSeats();
 
                 sprintf(event, "%s bought a ticket and has been seated.", customer);
                 print(event);
@@ -274,7 +303,7 @@ void sellTicket(int sellerId) {
                     HML[2]++;
                 }    
             } else {
-                pthread_mutex_unlock(&seatsMutex); // Unlock mutex if seats have been taken.
+                pthread_mutex_unlock(&seatsMutex); // Unlock mutex if no more seats.
                 
                 pthread_mutex_lock(&leaveMutex);
                 leaveCount++;
@@ -294,9 +323,50 @@ void sellTicket(int sellerId) {
 
 void seatCustomer(char* customer) {
     char seller = customer[0];
+    int i, j, seated = 0;
     if (seller == 'H') { // Seated by H.
+        for (i = 0; i < ROWS; i++) {
+            if (!seated) {
+                for (j = 0; j < COLS; j++) {
+                    if (strcmp(seats[i][j], "") == 0) {
+                        seats[i][j] = customer;
+                        seated = 1;
+                        break;
+                    }
+                }
+            }
+        }
     } else if (seller == 'M') { // Seated by M.
+        int count = 0;
+        for (i = 5; i < ROWS && i >= 0; ) {
+            if (count % 2 == 1) {
+                i += count;
+            } else {
+                i -= count;
+            }
+            if (!seated) {
+                for (j = 0; j < COLS; j++) {
+                    if (strcmp(seats[i][j], "") == 0) {
+                        seats[i][j] = customer;
+                        seated = 1;
+                        break;
+                    }
+                }
+            }
+            count++;
+        }
     } else { // Seated by L.
+        for (i = ROWS - 1; i >= 0; i--) {
+            if (!seated) {
+                for (j = 0; j < COLS; j++) {
+                    if (strcmp(seats[i][j], "") == 0) {
+                        seats[i][j] = customer;
+                        seated = 1;
+                        break;
+                    }
+                }
+            }
+        }
     }
 }
 
