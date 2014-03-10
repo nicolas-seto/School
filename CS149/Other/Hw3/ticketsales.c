@@ -21,7 +21,6 @@
 
 char*** setupSeats(int rowSize, int columnSize);
 int freeSeats(char*** seats);
-int spotsLeft(char* customer);
 char* joinQueue(int sellerIndex);
 void sellTicket(int sellerId);
 void seatCustomer(char* customer);
@@ -158,6 +157,7 @@ void *customer(void *param) {
         time(&now); // waiting in queue
     } while (difftime(now, start) < 10.0 && !timesUp);
 
+    pthread_mutex_lock(&queueMutex); // Lock before seller can access
     int outcome = atoi(queues[id][queueNum]); // Loop is broken either from waiting longer than 10 minutes or time is up.
 
     if (!outcome) { // Customer has not been seated because the wait has been 10 minutes or time is up.
@@ -165,23 +165,26 @@ void *customer(void *param) {
         if (difftime(now, start) >= 10.0) { // Customer waited 10 minutes or longer.
             sprintf(event, "%s left because 10+ minutes elapsed while waiting.", name);
             print(event);
+            queues[id][queueNum] = "1";
         } else if (timesUp) {
             sprintf(event, "%s left because ticket sales are over.", name);
             print(event);
+            queues[id][queueNum] = "1";
         }
         leaveCount++;
         pthread_mutex_unlock(&leaveMutex);
     }
+    pthread_mutex_unlock(&queueMutex);
 
     return NULL;
 }
 
 // Join the seller's queue. Return the name of the customer.
 char* joinQueue(int sellerIndex) {
-    static char name[5];
+    char* name = (char*)malloc(CUST_NAME_LENGTH * sizeof(char));
+    char event[80];
 
     pthread_mutex_lock(&queueMutex); // Lock here so multiple customers do not receive the same name.
-
     int size = queueSize[sellerIndex];
     int number = size + 1;
     if (sellerIndex == 0) {
@@ -197,8 +200,10 @@ char* joinQueue(int sellerIndex) {
             sprintf(name, "%s%d", sellers[sellerIndex], number);
         }
     }
-    
-    *queues[sellerIndex][size] = *name; // Add customer's name to queue.
+
+    queues[sellerIndex][size] = name; // Add customer's name to queue.
+    sprintf(event, "%s has been added to %s's queue.", queues[sellerIndex][size], sellers[sellerIndex]);
+    print(event);
     queueSize[sellerIndex]++; // Increment queue size for seller.
 
     pthread_mutex_unlock(&queueMutex);
@@ -212,10 +217,9 @@ void *seller(void *param) {
     pthread_mutex_lock(&sellerMutex); // When last seller sets up, start time.
     sellerSetupCount++;
     if (sellerSetupCount == ROWS_SELLERS) {
-        alarm(SALES_HOUR_DURATION); // use alarm instead of setitimer()
         time(&startTime);
-        //saleTimer.it_value.tv_sec = SALES_HOUR_DURATION;
-        //setitimer(ITIMER_REAL, &saleTimer, NULL);
+        saleTimer.it_value.tv_sec = SALES_HOUR_DURATION;
+        setitimer(ITIMER_REAL, &saleTimer, NULL);
     }
     pthread_mutex_unlock(&sellerMutex);
 
@@ -229,6 +233,7 @@ void *seller(void *param) {
 
 // Seller sells ticket.
 void sellTicket(int sellerId) {
+    pthread_mutex_lock(&queueMutex); // Lock here because seller is dealing with customer, so customer will not leave.
     
     int index = nextUp[sellerId]; // Get index of customer who is next in line.
     char* customer = queues[sellerId][index];
@@ -236,57 +241,64 @@ void sellTicket(int sellerId) {
     char event[80];
 
     if (strcmp(customer, "") != 0) { // Do something if there is a customer in the queue.
-        if (seatsTaken < (ROWS * COLS)) { // There are seats open.
-            if (seller == 'H') { // Simulate ticket sale length.
-                sleep(randomRange(1, 2));
-            } else if (seller == 'M') {
-                sleep(randomRange(2, 4));
-            } else {
-                sleep(randomRange(4, 7));
-            }
+        if (strcmp(customer, "1") != 0) { // If the string is not 1, then the customer has not left already.
+
             pthread_mutex_lock(&seatsMutex);
-            seatCustomer(customer);
 
-            sprintf(event, "%s bought a ticket and has been seated.", customer);
-            print(event);
+            if (seatsTaken < (ROWS * COLS)) { // There are seats open.
+                if (seller == 'H') { // Simulate ticket sale length.
+                    sleep(randomRange(1, 2));
+                } else if (seller == 'M') {
+                    sleep(randomRange(2, 4));
+                } else {
+                    sleep(randomRange(4, 7));
+                }
+                
+                seatCustomer(customer);
 
-            seatsTaken++;
-            if (seller == 'H') { // Seated by H.
-                HML[0]++;
-            } else if (seller == 'M') { // Seated by M.
-                HML[1]++;
-            } else { // Seated by L.
-                HML[2]++;
+                sprintf(event, "%s bought a ticket and has been seated.", customer);
+                print(event);
+
+                seatsTaken++;
+                if (seller == 'H') { // Seated by H.
+                    HML[0]++;
+                } else if (seller == 'M') { // Seated by M.
+                    HML[1]++;
+                } else { // Seated by L.
+                    HML[2]++;
+                }
+
+                queues[sellerId][index] = "1";
+            } else {
+                pthread_mutex_lock(&leaveMutex);
+                leaveCount++;
+
+                sprintf(event, "Seats are filled. %s left.", customer);
+                print(event);
+                pthread_mutex_unlock(&leaveMutex);
+
+                queues[sellerId][index] = "1";
             }
+
             pthread_mutex_unlock(&seatsMutex);
-
-            queues[sellerId][index] = "1";
-        } else {
-            pthread_mutex_lock(&leaveMutex);
-            leaveCount++;
-
-            sprintf(event, "Seats are filled. %s left.", customer);
-            print(event);
-            pthread_mutex_unlock(&leaveMutex);
-
-            queues[sellerId][index] = "1";
         }
-        nextUp[sellerId]++;
+        nextUp[sellerId]++; // Increment when customer has already been processed.
     }
+
+    pthread_mutex_unlock(&queueMutex);
 }
 
 void seatCustomer(char* customer) {
-
+    char seller = customer[0];
+    if (seller == 'H') { // Seated by H.
+    } else if (seller == 'M') { // Seated by M.
+    } else { // Seated by L.
+    }
 }
 
 // Return a random number between min (inclusive) and max (inclusive).
 int randomRange(int min, int max) {
     return (rand() % (max + 1 - min)) + min;
-}
-
-// If true,customer is assigned a seat. If false, there are no more seats and the customer does not get a seat and is turned away.
-int spotsLeft(char* customer) {
-    return 0;
 }
 
 // Timer signal handler.
@@ -302,7 +314,7 @@ int main(int argc, char *argv[]) {
 
     seats = setupSeats(ROWS, COLS); // Initialize seats
     setupSellers(); // Initialize array that holds names of sellers, initialize leave count, initialize sell count per seller for each seller, queue sizes, next up
-    queues = setupSeats(ROWS, N); // Initialize queues.
+    queues = setupSeats(ROWS, N + 1); // Initialize queues.
 
     // Initialize mutexes
     pthread_mutex_init(&seatsMutex, NULL);
@@ -314,6 +326,7 @@ int main(int argc, char *argv[]) {
     srand(time(0));
 
     pthread_t sellerThreadId[ROWS_SELLERS];
+    printf("Creating seller threads.\n");
     // Create the seller threads.
     for (i = 0; i < ROWS_SELLERS; i++) {
         pthread_attr_t sellerAttr;
@@ -321,24 +334,27 @@ int main(int argc, char *argv[]) {
         pthread_create(&sellerThreadId[i], &sellerAttr, seller, &indices[i]);
     }
 
-    // Wait for the hour to be over.
-    for (i = 0; i < ROWS_SELLERS; i++) {
-        pthread_join(sellerThreadId[i], NULL);
-    }
-
+    pthread_t customerThreadIds[ROWS_SELLERS][N];
+    printf("Creating customer threads.\n");
     // Create customer threads while time is still running.
     for (i = 0; i < ROWS_SELLERS; i++) {
         for (j = 0; j < N; j++) {
-            pthread_t customerThreadId;
             pthread_attr_t customerAttr;
             pthread_attr_init(&customerAttr);
-            pthread_create(&customerThreadId, &customerAttr, customer, &indices[i]);
-            pthread_join(customerThreadId, NULL);
+            pthread_create(&customerThreadIds[i][j], &customerAttr, customer, &indices[i]);
         }
     }
 
     // Call timeHandler when alarm goes off
     signal(SIGALRM, timerHandler);
+
+    // Wait for the hour to be over.
+    for (i = 0; i < ROWS_SELLERS; i++) {
+        pthread_join(sellerThreadId[i], NULL);
+        for (j = 0; j < N; j++) {
+            pthread_join(customerThreadIds[i][j], NULL);
+        }
+    }
 
     freeSeats(seats); // Free memory after program is done running
     freeSeats(queues);
