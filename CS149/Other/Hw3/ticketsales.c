@@ -431,6 +431,12 @@ int main(int argc, char *argv[]) {
         }
     }
 
+    printf("%d customers per seller summary:\n", N);
+    printf("%d H customers got seats.\n", HML[0]);
+    printf("%d M customers got seats.\n", HML[1]);
+    printf("%d L customers got seats.\n", HML[2]);
+    printf("%d customers left because sales were over, there were no more open seats, or they waited 10+ minutes in line.\n", leaveCount);
+
     freeSeats(seats); // Free memory after program is done running
     freeSeats(queues);
     return 0;
