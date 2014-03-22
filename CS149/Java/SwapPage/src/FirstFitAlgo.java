@@ -83,20 +83,24 @@ public class FirstFitAlgo {
             {
                 memorySpace[count] = tempProc.toString();
             }   
+            activeProcess.add(tempProc);
+            System.out.println("proc"+tempProc.getName() + " size" + tempProc.getSize() + " duration"+tempProc.getDuration());
         }
         
-        activeProcess.add(tempProc);
+        
 
         return added;
     }
 
-    public void cleanProcess()
+    public boolean cleanProcess()
     {
+        Boolean removed = false;
         ArrayList<SwapProcess> tempProcess = activeProcess;
         for(int i =0 ;i < tempProcess.size();i++)
         {
             if(tempProcess.get(i).getDuration() <=0)
             {
+                
                 SwapProcess tempProc = tempProcess.get(i);
                 for(int m = 0; m <100;m++)
                 {
@@ -106,8 +110,10 @@ public class FirstFitAlgo {
                     }
                 }
                 activeProcess.remove(i);
+                removed = true;
             }
         }
+        return removed;
     }
 
     public void decrementProcess()

@@ -1,11 +1,13 @@
 import java.util.ArrayList;
 
 
-public class NextFitAlgo {
+public class BestFitAlgo {
+
     String[] memorySpace = new String[100];
     ArrayList<SwapProcess> activeProcess = new ArrayList<SwapProcess>();
-    int nextIndex=0;
-    public NextFitAlgo()
+    ArrayList<Hole> holeList = new ArrayList<Hole>();
+    
+    public BestFitAlgo()
     {
         for(int i = 0 ; i < 100;i++)
         {
@@ -13,92 +15,103 @@ public class NextFitAlgo {
         }
     }
 
-    //looks for next available hole starting from the start (index)
     public int nextHoleIndex(int start)
     {
         int index = 102;
         int count = start;
         boolean hole = false;
-        //System.out.println("new in" + count);
         while(count <100 && !hole)
         {
-            //System.out.println("new in" + count);
             if(memorySpace[count].equalsIgnoreCase("."))
             {
-
+                
                 index = count;
                 hole = true;
-                //System.out.println(hole);
             }
             count++;
         }
-
+        
         return index;
     }
 
-
     public boolean addProcess(SwapProcess proc)
     {
+        boolean holeFound = false;
         SwapProcess tempProc = proc;
         int size = tempProc.getSize();
-        int startIndex = 0,index = nextIndex;
-        boolean added = false,firstLoop = false;;
-
-        while(index < 100 && !added)
+        newHoleList();
+        int maxSize = 102;
+        Hole chosenHole = new Hole(0,0);
+        
+        for (int i = 0; i < holeList.size();i++)
         {
-            startIndex = nextHoleIndex(index);
-
-            //check if the process will get out of bound
-            if(startIndex + size > 100)
+            holeFound = false;
+            Hole hole = holeList.get(i);
+            if(hole.getSize() >= proc.getSize() && hole.getSize() < maxSize)
             {
-                if(!firstLoop)
-                {
-                    index = 0;
-                    firstLoop = true;
-                }else{
-                    index = 101;
-                }
+                maxSize = hole.getSize();
+                        chosenHole = hole;
+                        holeFound = true;
             }
-            else
-            {
-                int endPoint = (startIndex + size);
-                //check if the process is too big for the hole
-                for(int i = startIndex ; i < endPoint; i++)
-                {
-                    if(!memorySpace[i].equalsIgnoreCase("."))
-                    {
-                        index = 200;
-                        startIndex = i;
-                        added = false;
-                    }
-                    if(index != 200)
-                    {
-
-                        added= true;
-
-                    }
-                }
-            }
-            index++;
         }
-
-
-        if(added == true)
+        
+        if(holeFound)
         {
-            int endPoint = (startIndex+size);
-            nextIndex = startIndex;
-            for(int count = startIndex; count < endPoint; count++)
+            int startPoint = chosenHole.getStartIndex();
+            int endPoint = (startPoint+tempProc.getSize());
+            for(int i = startPoint; i < endPoint;i++)
             {
-                memorySpace[count] = tempProc.toString();
-            }   
+                memorySpace[i] = tempProc.toString();
+                
+            }
             activeProcess.add(tempProc);
         }
-
         
-
-        return added;
+        return holeFound;
     }
 
+    public void newHoleList()
+    {
+        holeList = new ArrayList<Hole>();
+        int indexHole;
+        
+        for (int i = 0 ;i<100;i++)
+        {
+            indexHole = nextHoleIndex(i);
+
+            if(indexHole <100)
+            {
+                Boolean endOfHole = false;
+                int startHole = indexHole;
+                
+                while(!endOfHole && startHole < 100)
+                {
+                    
+                    String value = memorySpace[startHole];
+                    if(!value.equalsIgnoreCase("."))
+                    {
+                        endOfHole = true;
+                        i = startHole;
+                    }else if(startHole == 99)
+                    {
+                        i = startHole;
+                        startHole++;
+                    }else
+                    {
+                        startHole++;
+                    }
+                }
+                
+                int endIndex = startHole-1;             
+                Hole newHole = new Hole(indexHole,endIndex);
+                holeList.add(newHole);
+            }
+            
+        }
+        
+        
+        
+    }
     public boolean cleanProcess()
     {
         Boolean removed = false;
@@ -107,6 +120,7 @@ public class NextFitAlgo {
         {
             if(tempProcess.get(i).getDuration() <=0)
             {
+                
                 SwapProcess tempProc = tempProcess.get(i);
                 for(int m = 0; m <100;m++)
                 {
@@ -129,7 +143,6 @@ public class NextFitAlgo {
             activeProcess.get(i).decrementDuration();
         }
     }
-
     public String toString()
     {
         String output = "-";
