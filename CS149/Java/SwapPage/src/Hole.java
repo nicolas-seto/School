@@ -4,6 +4,6 @@ public class Hole extends Proc {
 
 	public Hole()
 	{
-		super('.', DEFAULT_SIZE);
+		super(".", DEFAULT_SIZE);
 	}
 }

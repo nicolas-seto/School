@@ -9,7 +9,7 @@ public class PageProcess extends Proc {
     private int referenceCount;
     private int lastIndex;
     
-    public PageProcess(char name) {
+    public PageProcess(String name) {
         super(name, DEFAULT_SIZE);
         rand = new Random();
         referenceCount = 0;

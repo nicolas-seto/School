@@ -1,12 +1,11 @@
 import java.util.ArrayList;
 
 
-public class FirstFitAlgo {
-
+public class NextFitAlgo {
     String[] memorySpace = new String[100];
     ArrayList<SwapProcess> activeProcess = new ArrayList<SwapProcess>();
 
-    public FirstFitAlgo()
+    public NextFitAlgo()
     {
         for(int i = 0 ; i < 100;i++)
         {
@@ -14,6 +13,7 @@ public class FirstFitAlgo {
         }
     }
 
+    //looks for next available hole starting from the start (index)
     public int nextHoleIndex(int start)
     {
         int index = 102;
@@ -25,16 +25,17 @@ public class FirstFitAlgo {
             //System.out.println("new in" + count);
             if(memorySpace[count].equalsIgnoreCase("."))
             {
-                
+
                 index = count;
                 hole = true;
                 //System.out.println(hole);
             }
             count++;
         }
-        
+
         return index;
     }
+
 
     public boolean addProcess(SwapProcess proc)
     {
@@ -42,40 +43,40 @@ public class FirstFitAlgo {
         int size = tempProc.getSize();
         int startIndex = 0,index = 0;
         boolean added = false;
+
         while(index < 100 && !added)
         {
-
             startIndex = nextHoleIndex(index);
-            
+
+            //check if the process will get out of bound
             if(startIndex + size > 100)
             {
                 index = 101;
             }
             else
             {
-                    int endPoint = (startIndex + size);
-                 for(int i = startIndex ; i < endPoint; i++)
-                 {
-                     //System.out.println(i + "**"  +(endPoint));
-                     if(!memorySpace[i].equalsIgnoreCase("."))
-                     {
-                         index = 200;
-                         startIndex = i;
+                int endPoint = (startIndex + size);
+                //check if the process is too big for the hole
+                for(int i = startIndex ; i < endPoint; i++)
+                {
+                    if(!memorySpace[i].equalsIgnoreCase("."))
+                    {
+                        index = 200;
+                        startIndex = i;
+                        added = false;
+                    }
+                    if(index != 200)
+                    {
 
-                         added = false;
-                     }
-                     if(index != 200)
-                     {
-                         
-                         added= true;
-                         
-                     }
-                 }
+                        added= true;
+
+                    }
+                }
             }
             index++;
         }
-        
-        
+
+
         if(added == true)
         {
             int endPoint = (startIndex+size);
@@ -84,7 +85,7 @@ public class FirstFitAlgo {
                 memorySpace[count] = tempProc.toString();
             }   
         }
-        
+
         activeProcess.add(tempProc);
 
         return added;
@@ -117,6 +118,7 @@ public class FirstFitAlgo {
             activeProcess.get(i).decrementDuration();
         }
     }
+
     public String toString()
     {
         String output = "-";

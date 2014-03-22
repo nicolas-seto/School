@@ -12,7 +12,7 @@ public class Paging {
     private static void runFIFO() {
         total = 0;
         for (int i = 1; i <= 5; i++) {
-            aProcess = new PageProcess('A');
+            aProcess = new PageProcess("A");
             a = new FIFO(aProcess);
             System.out.printf("Run %d of FIFO:\n", i);
             a.run();
@@ -25,7 +25,7 @@ public class Paging {
     private static void runLRU() {
         total = 0;
         for (int i = 1; i <= 5; i++) {
-            aProcess = new PageProcess('A');
+            aProcess = new PageProcess("A");
             b = new LRU(aProcess);
             System.out.printf("Run %d of LRU:\n", i);
             b.run();
@@ -38,7 +38,7 @@ public class Paging {
     private static void runLFU() {
         total = 0;
         for (int i = 1; i <= 5; i++) {
-            aProcess = new PageProcess('A');
+            aProcess = new PageProcess("A");
             c = new LFU(aProcess);
             System.out.printf("Run %d of LFU:\n", i);
             c.run();
@@ -51,7 +51,7 @@ public class Paging {
     private static void runMFU() {
         total = 0;
         for (int i = 1; i <= 5; i++) {
-            aProcess = new PageProcess('A');
+            aProcess = new PageProcess("A");
             d = new MFU(aProcess);
             System.out.printf("Run %d of MFU:\n", i);
             d.run();
@@ -64,7 +64,7 @@ public class Paging {
     private static void runRandomPick() {
         total = 0;
         for (int i = 1; i <= 5; i++) {
-            aProcess = new PageProcess('A');
+            aProcess = new PageProcess("A");
             e = new RandomPick(aProcess);
             System.out.printf("Run %d of Random Pick:\n", i);
             e.run();

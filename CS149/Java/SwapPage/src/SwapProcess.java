@@ -9,9 +9,19 @@ public class SwapProcess extends Proc {
     private static final int SIZE3 = 31;
     private static final int[] sizes = {SIZE0, SIZE1, SIZE2, SIZE3};
 
-    public SwapProcess(char name)
+    public SwapProcess(String name)
     {
         super(name, sizes[(int) Math.floor(Math.random()*4)]);
         duration = (int) Math.floor(Math.random()*5) + 1;
+    }
+    
+    public int getDuration()
+    {
+        return duration;
+    }
+    
+    public void decrementDuration()
+    {
+        duration--;
     }
 }

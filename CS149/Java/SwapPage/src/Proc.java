@@ -1,13 +1,13 @@
 
 public class Proc {
 
-    private char name;
+    private String name;
     private int size;
-    public static final int PAGE_SIZE = 10;
+    private static final int PAGE_SIZE = 10;
     public static int DEFAULT_SIZE = 0;
     private StringBuffer buffer;
 
-    public Proc(char name, int size) {
+    public Proc(String name, int size) {
         this.name = name;
         this.size = size;
         buffer = new StringBuffer();
@@ -22,9 +22,14 @@ public class Proc {
     
     public String toString()
     {
-        return "-"+buffer.toString();
+        return name;
     }
 
+    public String getName()
+    {
+        return name;
+    }
+    
     public int getSize() {
         return size;
     }
