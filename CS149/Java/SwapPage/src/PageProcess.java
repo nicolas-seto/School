@@ -5,7 +5,7 @@ public class PageProcess extends Proc {
     
     private Random rand;
     private static final int SEVEN = 7;
-    private static final int THREE = 7;
+    private static final int THREE = 3;
     private int referenceCount;
     private int lastIndex;
     
