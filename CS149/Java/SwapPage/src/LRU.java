@@ -2,6 +2,11 @@
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * Implements the Least-recently used algorithm for paging.
+ * @author Home
+ *
+ */
 public class LRU {
 
     private PageProcess process;
@@ -35,6 +40,12 @@ public class LRU {
         this.runProcess();
     }
     
+    /**
+     * Use an arraylist to reorder pages in terms of recently used. If there's
+     * a hit, then the page is removed and sent to the head of the list. If there's
+     * a fault, then the least-frequently used page is removed and the new page
+     * is inserted at the head of the list.
+     */
     private void runProcess() {
         
         for (int i = 0; i < TOTAL_REF; i++) {
@@ -45,6 +56,7 @@ public class LRU {
                 pagedIn = pagedOut = -1;
                 hitPage = page;
                 
+                // Move the page that is hit to the front.
                 for (int j = 0; j < FOUR; j++) {
                     if (recentlyUsed.get(j) == index) {
                         recentlyUsed.add(0, recentlyUsed.remove(j));
@@ -59,6 +71,11 @@ public class LRU {
         }
     }
     
+    /**
+     * Returns the index of the page in the page frame in physical memory.
+     * @param j the page
+     * @return the index of the page
+     */
     private int containsPage(int j) {
         for (int i = 0; i < FOUR; i++) {
             if (pageFrame[i] == j) {
@@ -68,6 +85,12 @@ public class LRU {
         return -1;
     }
     
+    /**
+     * If the page frame is not full, add the page to an empty spot and insert
+     * its index to the head of the arraylist. If full, then remove the page that
+     * is stored at the index of the tail in the arraylist.
+     * @param page
+     */
     private void insertToPageFrame(int page) {
         if (!isPageFrameFilled()) {
             for (int i = 0; i < FOUR; i++) {

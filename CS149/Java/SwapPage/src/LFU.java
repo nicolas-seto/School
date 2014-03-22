@@ -1,4 +1,8 @@
-
+/**
+ * Implements Least-frequently used algorithm for paging.
+ * @author Home
+ *
+ */
 public class LFU {
 
     private PageProcess process;
@@ -34,6 +38,11 @@ public class LFU {
         this.runProcess();
     }
     
+    /**
+     * If the page frames in physical memory contain the page, it's a hit and
+     * the use count is incremented. Otherwise, it's a fault, and we evict the
+     * page with the least amount of uses.
+     */
     private void runProcess() {
         
         for (int i = 0; i < TOTAL_REF; i++) {
@@ -53,6 +62,11 @@ public class LFU {
         }
     }
     
+    /**
+     * Returns the index at which the element is contained.
+     * @param j the page
+     * @return the index number of the page in the pageFrame array
+     */
     private int containsPage(int j) {
         for (int i = 0; i < FOUR; i++) {
             if (pageFrame[i] == j) {
@@ -62,6 +76,10 @@ public class LFU {
         return -1;
     }
     
+    /**
+     * Evict a page that's been used the least.
+     * @param page
+     */
     private void insertToPageFrame(int page) {
         if (!isPageFrameFilled()) {
             for (int i = 0; i < FOUR; i++) {
@@ -92,6 +110,10 @@ public class LFU {
         return isFilled;
     }
     
+    /**
+     * Returns the index of the page with the least hits.
+     * @return the index i
+     */
     private int leastFrequentlyUsed() {
         int max = TOTAL_REF;
         int index = 0;
