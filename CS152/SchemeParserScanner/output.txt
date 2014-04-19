@@ -1,0 +1,317 @@
+*********************
+*BEGINNING FILE SCAN*
+*********************
+LINE
+; Find the derivative of polynomial poly with repect to variable var.
+TOKENS
+*****************
+LINE
+; The polynomial must be in canonical infix form.
+TOKENS
+*****************
+LINE
+(define deriv
+TOKENS
+DELIMITER : "("
+KEYWORD   : "define"
+SYMBOL    : "deriv"
+*****************
+LINE
+(lambda (poly var)
+TOKENS
+DELIMITER : "("
+KEYWORD   : "lambda"
+DELIMITER : "("
+SYMBOL    : "poly"
+SYMBOL    : "var"
+DELIMITER : ")"
+*****************
+LINE
+(let* ((terms (terminize poly)) ; "terminize" the polynomial
+TOKENS
+DELIMITER : "("
+KEYWORD   : "let*"
+DELIMITER : "("
+DELIMITER : "("
+SYMBOL    : "terms"
+DELIMITER : "("
+SYMBOL    : "terminize"
+SYMBOL    : "poly"
+DELIMITER : ")"
+DELIMITER : ")"
+*****************
+LINE
+(deriv-term              ; local procedure deriv-term
+TOKENS
+DELIMITER : "("
+SYMBOL    : "deriv-term"
+*****************
+LINE
+(lambda (term)
+TOKENS
+DELIMITER : "("
+KEYWORD   : "lambda"
+DELIMITER : "("
+SYMBOL    : "term"
+DELIMITER : ")"
+*****************
+LINE
+(cond
+TOKENS
+DELIMITER : "("
+KEYWORD   : "cond"
+*****************
+LINE
+((null? term) '())
+TOKENS
+DELIMITER : "("
+DELIMITER : "("
+SYMBOL    : "null?"
+SYMBOL    : "term"
+DELIMITER : ")"
+SP SYMBOL : "'"
+DELIMITER : "("
+DELIMITER : ")"
+DELIMITER : ")"
+*****************
+LINE
+((not (member? var term)) '(0))           ; deriv = 0
+TOKENS
+DELIMITER : "("
+DELIMITER : "("
+SYMBOL    : "not"
+DELIMITER : "("
+SYMBOL    : "member?"
+SYMBOL    : "var"
+SYMBOL    : "term"
+DELIMITER : ")"
+DELIMITER : ")"
+SP SYMBOL : "'"
+DELIMITER : "("
+NUMBER    : "0"
+DELIMITER : ")"
+DELIMITER : ")"
+*****************
+LINE
+((not (member? '^ term)) (upto var term)) ; deriv = coeff
+TOKENS
+DELIMITER : "("
+DELIMITER : "("
+SYMBOL    : "not"
+DELIMITER : "("
+SYMBOL    : "member?"
+SP SYMBOL : "'"
+SYMBOL    : "^"
+SYMBOL    : "term"
+DELIMITER : ")"
+DELIMITER : ")"
+DELIMITER : "("
+SYMBOL    : "upto"
+SYMBOL    : "var"
+SYMBOL    : "term"
+DELIMITER : ")"
+DELIMITER : ")"
+*****************
+LINE
+(else (deriv-term-expo term var))         ; handle exponent
+TOKENS
+DELIMITER : "("
+KEYWORD   : "else"
+DELIMITER : "("
+SYMBOL    : "deriv-term-expo"
+SYMBOL    : "term"
+SYMBOL    : "var"
+DELIMITER : ")"
+DELIMITER : ")"
+*****************
+LINE
+)))
+TOKENS
+DELIMITER : ")"
+DELIMITER : ")"
+DELIMITER : ")"
+*****************
+LINE
+(diff (map deriv-term terms)))   ; map deriv-term over the terms
+TOKENS
+DELIMITER : "("
+SYMBOL    : "diff"
+DELIMITER : "("
+SYMBOL    : "map"
+SYMBOL    : "deriv-term"
+SYMBOL    : "terms"
+DELIMITER : ")"
+DELIMITER : ")"
+DELIMITER : ")"
+*****************
+LINE
+(remove-trailing-plus (polyize diff)) ; finalize the answer
+TOKENS
+DELIMITER : "("
+SYMBOL    : "remove-trailing-plus"
+DELIMITER : "("
+SYMBOL    : "polyize"
+SYMBOL    : "diff"
+DELIMITER : ")"
+DELIMITER : ")"
+*****************
+LINE
+)))
+TOKENS
+DELIMITER : ")"
+DELIMITER : ")"
+DELIMITER : ")"
+*****************
+LINE
+; Convert an infix polynomial into a list of sublists,
+TOKENS
+*****************
+LINE
+; where each sublist is a term.
+TOKENS
+*****************
+LINE
+(define terminize
+TOKENS
+DELIMITER : "("
+KEYWORD   : "define"
+SYMBOL    : "terminize"
+*****************
+LINE
+(lambda (poly)
+TOKENS
+DELIMITER : "("
+KEYWORD   : "lambda"
+DELIMITER : "("
+SYMBOL    : "poly"
+DELIMITER : ")"
+*****************
+LINE
+(cond
+TOKENS
+DELIMITER : "("
+KEYWORD   : "cond"
+*****************
+LINE
+((null? poly) '())
+TOKENS
+DELIMITER : "("
+DELIMITER : "("
+SYMBOL    : "null?"
+SYMBOL    : "poly"
+DELIMITER : ")"
+SP SYMBOL : "'"
+DELIMITER : "("
+DELIMITER : ")"
+DELIMITER : ")"
+*****************
+LINE
+(else (cons (upto '+ poly) (terminize (after '+ poly))))
+TOKENS
+DELIMITER : "("
+KEYWORD   : "else"
+DELIMITER : "("
+SYMBOL    : "cons"
+DELIMITER : "("
+SYMBOL    : "upto"
+SP SYMBOL : "'"
+SYMBOL    : "+"
+SYMBOL    : "poly"
+DELIMITER : ")"
+DELIMITER : "("
+SYMBOL    : "terminize"
+DELIMITER : "("
+SYMBOL    : "after"
+SP SYMBOL : "'"
+SYMBOL    : "+"
+SYMBOL    : "poly"
+DELIMITER : ")"
+DELIMITER : ")"
+DELIMITER : ")"
+DELIMITER : ")"
+*****************
+LINE
+)))
+TOKENS
+DELIMITER : ")"
+DELIMITER : ")"
+DELIMITER : ")"
+*****************
+**************
+*SYMBOL TABLE*
+**************
+^
+deriv
+deriv-term
+deriv-term-expo
+diff
+map
+member?
+not
+null?
+poly
+polyize
+remove-trailing-plus
+term
+terminize
+terms
+upto
+var
+*******************
+*BINARY PARSE TREE*
+*******************
+
+(define deriv 
+  (lambda 
+    (poly var)  
+      (let* 
+        (
+          (terms 
+            (terminize poly)  ) 
+              (deriv-term 
+                (lambda 
+                  (term)  
+                    (cond 
+                      (
+                        (null? term)  ' 
+                          () ) 
+                            (
+                              (not 
+                                (member? var term)  ) ' 
+                                  (0)  ) 
+                                    (
+                                      (not 
+                                        (member? ' ^ term)  ) 
+                                          (upto var term)  
+                                            (else 
+                                              (deriv-term-expo term var)  
+                                                (diff 
+                                                  (map deriv-term terms)  
+                                                    (remove-trailing-plus 
+                                                      (polyize diff)  ) ) ) ) ) ) ) ) ) ) ) 
+**************
+*SYMBOL TABLE*
+**************
++
+after
+cons
+null?
+poly
+terminize
+upto
+*******************
+*BINARY PARSE TREE*
+*******************
+
+(define terminize 
+  (lambda 
+    (poly)  
+      (cond 
+        (
+          (null? poly)  ' 
+            () ) 
+              (else 
+                (cons 
+                  (upto ' + poly)  
+                    (terminize 
+                      (after ' + poly)  ) ) ) ) ) ) 
