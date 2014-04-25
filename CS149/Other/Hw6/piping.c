@@ -98,7 +98,7 @@ int child(int id, int pipes[NUMPIPES][NUMFILEDESC]) {
     struct timeval child_start, child_stop;
     int sec, msec, message = 1, random;
     
-    if (close(pipe[id-1][0]) == -1) {
+    if (close(pipes[id - 1][0]) == -1) {
         printf("%s %d.\n", CLOSER_ERROR, id);
         exit(1);
     }
@@ -135,7 +135,7 @@ int child(int id, int pipes[NUMPIPES][NUMFILEDESC]) {
                 sec + (msec / MICRO), std_in);
         }
         
-        write(pipe[id-1][1], buffer, STRLEN);
+        write(pipes[id - 1][1], buffer, STRLEN);
         gettimeofday(&child_stop, NULL);
     } while (child_stop.tv_sec - child_start.tv_sec < TIMER);
     
