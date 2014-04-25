@@ -21,7 +21,10 @@ int parent(void);
 int child(int id);
 
 int main(void) {
-    int i;
+    char buffer[STRLEN], output[STRLEN];
+    fd_set original, copy;
+    FILE *op = fopen("output.txt", "w");
+    int i, sec, msec;
     
     /* Begin timer for both parent and children */
     gettimeofday(&start, NULL);
@@ -44,17 +47,10 @@ int main(void) {
             child(i + 1);
         }
     }
-    /* Have the parent process watch the pipes */
-    parent();
-    return 0;
-}
-
-int parent(void) {
-    char buffer[STRLEN], output[STRLEN];
-    fd_set original, copy;
-    FILE *op = fopen("output.txt", "w");
-    int i, nfds = pipes[NUMPIPES][0], sec, msec;
     
+    int nfds = pipes[NUMPIPES][0];
+    
+    /* Have the parent process watch the pipes */
     FD_ZERO(&original);
     /* Watch read-ends and close write-ends */
     for (i = 0; i < NUMPIPES; i++) {
@@ -92,6 +88,50 @@ int parent(void) {
     fclose(op);
     return 0;
 }
+
+/*int parent(void) {
+    char buffer[STRLEN], output[STRLEN];
+    fd_set original, copy;
+    FILE *op = fopen("output.txt", "w");
+    int i, nfds = pipes[NUMPIPES][0], sec, msec;
+    
+    FD_ZERO(&original);
+
+    for (i = 0; i < NUMPIPES; i++) {
+        FD_SET(pipes[i][0], &original);
+        if (close(pipes[i][1]) == -1) {
+            printf("%s %d.\n", CLOSEW_ERROR, i);
+            exit(1);
+        }
+    }
+    
+    copy = original;
+    
+    while (select(nfds, &original, NULL, NULL, NULL) > 0) {
+        for (i = 0; i < NUMPIPES; i++) {
+            if (FD_ISSET(pipes[i][0], &original)) {
+                if (read(pipes[i][0], buffer, STRLEN) > 0) {
+                    printf("%s", buffer);
+                    gettimeofday(&stop, NULL);
+                    sec = stop.tv_sec - start.tv_sec;
+                    msec = stop.tv_usec - start.tv_usec;
+                    sprintf(output, "%1d:%2.3f: %s", 0, sec + (msec / MICRO), buffer);
+                    printf("%s", output);
+                    fprintf(op, "%s", output);
+                }
+            }
+        }
+        
+        if (waitpid(-1, NULL, WNOHANG) == -1) {
+            fclose(op);
+            return 0;
+        }
+        
+        original = copy;
+    }
+    fclose(op);
+    return 0;
+}*/
 
 int child(int id) {
     char buffer[STRLEN], std_in[STRLEN];
@@ -131,8 +171,8 @@ int child(int id) {
             sec = stop.tv_sec - start.tv_sec;
             msec = stop.tv_usec - start.tv_usec;
             
-            sprintf(buffer, "%1d:%2.3f: %s\n", 0, 
-                sec + (msec / MICRO), std_in);
+            sprintf(buffer, "%1d:%2.3f: Child %d %s\n", 0, 
+                sec + (msec / MICRO), id, std_in);
             printf("%s", buffer);
         }
         
