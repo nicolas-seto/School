@@ -15,12 +15,12 @@ static const char FORK_ERROR[] = "ERROR: Forking failed.\n";
 static const char CLOSEW_ERROR[] = "ERROR: Parent failed in closing write-end of pipe";
 static const char CLOSER_ERROR[] = "ERROR: Child failed in closing read-end of pipe";
 struct timeval start, stop;
+int pipes[NUMPIPES][NUMFILEDESC];
 
-int parent(int pipes[NUMPIPES][NUMFILEDESC]);
-int child(int id, int pipes[NUMPIPES][NUMFILEDESC]);
+int parent(void);
+int child(int id);
 
 int main(void) {
-    int pipes[NUMPIPES][NUMFILEDESC];
     int i;
     
     /* Begin timer for both parent and children */
@@ -41,15 +41,15 @@ int main(void) {
             printf("%s", FORK_ERROR);
             exit(1);
         } else if (childpid == 0) {
-            child(i + 1, pipes);
+            child(i + 1);
         }
     }
     /* Have the parent process watch the pipes */
-    parent(pipes);
+    parent();
     return 0;
 }
 
-int parent(int pipes[NUMPIPES][NUMFILEDESC]) {
+int parent(void) {
     char buffer[STRLEN], output[STRLEN];
     fd_set original, copy;
     FILE *op = fopen("output.txt", "w");
@@ -93,7 +93,7 @@ int parent(int pipes[NUMPIPES][NUMFILEDESC]) {
     return 0;
 }
 
-int child(int id, int pipes[NUMPIPES][NUMFILEDESC]) {
+int child(int id) {
     char buffer[STRLEN], std_in[STRLEN];
     struct timeval child_start, child_stop;
     int sec, msec, message = 1, random;
