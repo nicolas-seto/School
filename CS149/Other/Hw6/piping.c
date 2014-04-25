@@ -27,6 +27,7 @@ int main(void) {
     gettimeofday(&start, NULL);
     
     for (i = 0; i < NUMPIPES; i++) {
+        printf("%d\n", i);
         /* Create the pipes */
         if (pipe(pipes[i]) == -1) {
             printf("%s", PIPE_ERROR);
@@ -40,7 +41,8 @@ int main(void) {
         if ((childpid = fork()) == -1) {
             printf("%s", FORK_ERROR);
             exit(1);
-        } else {
+        } else if (childpid == 0) {
+            printf("Executing child %d\n", i + 1);
             child(i + 1, pipes[i]);
         }
     }
