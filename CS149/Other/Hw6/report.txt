@@ -1,0 +1,7 @@
+Team We're Finally Graduating:
+
+After looking at some examples of the select call, writing the code was fairly straightforward.
+However, it took some time to understand what the purpose of the file descriptors were.
+In addition, there we encountered a bug where the parent process would only print out child 1's messages.
+This bug was due to the fact that we did not set the nfds variable to the correct value. In the end,
+we simply just used FD_SETSIZE, and everything worked fine.
