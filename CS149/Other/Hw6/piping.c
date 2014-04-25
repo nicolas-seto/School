@@ -17,7 +17,7 @@ static const char CLOSEW_ERROR[] = "ERROR: Parent failed in closing write-end of
 static const char CLOSER_ERROR[] = "ERROR: Child failed in closing read-end of pipe";
 struct timeval start, stop;
 
-int parent(int pipes[][]);
+int parent(int pipes[][NUMFILEDESC]);
 int child(int id, int pipe[]);
 
 int main(void) {
@@ -35,10 +35,10 @@ int main(void) {
         }
         
         /* pid of the child */
-        pid_t child;
+        pid_t childpid;
         
         /* Begin forking */
-        if ((child = fork()) == -1) {
+        if ((childpid = fork()) == -1) {
             fprintf(stderr, "%s", FORK_ERROR);
             exit(1);
         } else {
@@ -50,7 +50,7 @@ int main(void) {
     return 0;
 }
 
-int parent(int pipes[][]) {
+int parent(int pipes[][NUMFILEDESC]) {
     char buffer[STRLEN], output[STRLEN];
     fd_set original, copy;
     FILE *op = fopen(FILE_NAME, "w");
