@@ -6,7 +6,7 @@
 
 #define NUMPIPES 5
 #define NUMFILEDESC 2
-#define STRLEN 512
+#define STRLEN 256
 #define MICRO 1000000.0
 #define TIMER 30
 
@@ -123,7 +123,7 @@ int child(int id) {
             
             sprintf(buffer, "%1d:%2.3f: Child %d message %d\n", 0, 
                 sec + (msec / MICRO), id, message++);
-            //printf("%s", buffer);
+            printf("%s", buffer);
         } else { /* Child who reads stdin */
             scanf("%s", std_in);
             
