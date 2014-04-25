@@ -27,7 +27,6 @@ int main(void) {
     gettimeofday(&start, NULL);
     
     for (i = 0; i < NUMPIPES; i++) {
-        printf("%d\n", i);
         /* Create the pipes */
         if (pipe(pipes[i]) == -1) {
             printf("%s", PIPE_ERROR);
@@ -42,7 +41,6 @@ int main(void) {
             printf("%s", FORK_ERROR);
             exit(1);
         } else if (childpid == 0) {
-            printf("Executing child %d\n", i + 1);
             child(i + 1, pipes[i]);
         }
     }
@@ -103,6 +101,8 @@ int child(int id, int pipe[]) {
         exit(1);
     }
     
+    printf("Executing child %d\n", id);
+    
     gettimeofday(&stop, NULL);
     srand(stop.tv_usec - start.tv_usec);
     
@@ -121,6 +121,7 @@ int child(int id, int pipe[]) {
             
             sprintf(buffer, "%1d:%2.3f: Child %d message %d\n", 0, 
                 sec + (msec / MICRO), id, message++);
+            printf("%s", buffer);
         } else { /* Child who reads stdin */
             scanf("%s", std_in);
             
