@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <sys/time.h>
+#include <sys/wait.h>
 #include <unistd.h>
 
 #define NUMPIPES 5
@@ -16,8 +17,8 @@ static const char CLOSEW_ERROR[] = "ERROR: Parent failed in closing write-end of
 static const char CLOSER_ERROR[] = "ERROR: Child failed in closing read-end of pipe";
 struct timeval start, stop;
 
-int parent(int[][] pipes);
-int child(int id, int[] pipe);
+int parent(int pipes[][]);
+int child(int id, int pipe[]);
 
 int main(void) {
     int pipes[NUMPIPES][NUMFILEDESC];
