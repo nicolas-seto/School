@@ -82,6 +82,7 @@ int parent(int pipes[NUMPIPES][NUMFILEDESC]) {
             }
         }
         
+        /* Wait till children are done */
         if (waitpid(-1, NULL, WNOHANG) == -1) {
             fclose(op);
             return 0;
@@ -98,14 +99,17 @@ int child(int id, int pipe[NUMFILEDESC]) {
     struct timeval child_start, child_stop;
     int sec, msec, message = 1, random;
     
+    /* Close read-end for children */
     if (close(pipe[0]) == -1) {
         printf("%s %d.\n", CLOSER_ERROR, id);
         exit(1);
     }
     
+    /* Generate random seed */
     gettimeofday(&stop, NULL);
     srand(stop.tv_usec - start.tv_usec);
     
+    /* Start timer independent of parent timer */
     gettimeofday(&child_start, NULL);
     gettimeofday(&child_stop, NULL);
     
@@ -132,6 +136,7 @@ int child(int id, int pipe[NUMFILEDESC]) {
                 sec + (msec / MICRO), id, std_in);
         }
         
+        /* Write to write-end */
         write(pipe[1], buffer, STRLEN);
         gettimeofday(&child_stop, NULL);
     } while (child_stop.tv_sec - child_start.tv_sec < TIMER);
