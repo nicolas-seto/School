@@ -15,16 +15,13 @@ static const char FORK_ERROR[] = "ERROR: Forking failed.\n";
 static const char CLOSEW_ERROR[] = "ERROR: Parent failed in closing write-end of pipe";
 static const char CLOSER_ERROR[] = "ERROR: Child failed in closing read-end of pipe";
 struct timeval start, stop;
-int pipes[NUMPIPES][NUMFILEDESC];
 
-int parent(void);
-int child(int id);
+int parent(int pipes[NUMPIPES][NUMFILEDESC]);
+int child(int id, int pipes[NUMPIPES][NUMFILEDESC]);
 
 int main(void) {
-    char buffer[STRLEN], output[STRLEN];
-    fd_set original, copy;
-    FILE *op = fopen("output.txt", "w");
-    int i, sec, msec;
+    int pipes[NUMPIPES][NUMFILEDESC];
+    int i;
     
     /* Begin timer for both parent and children */
     gettimeofday(&start, NULL);
@@ -44,13 +41,21 @@ int main(void) {
             printf("%s", FORK_ERROR);
             exit(1);
         } else if (childpid == 0) {
-            child(i + 1);
+            child(i + 1, pipes);
         }
     }
     
-    int nfds = FD_SETSIZE;
-    
     /* Have the parent process watch the pipes */
+    parent(pipes);
+    return 0;
+}
+
+int parent(int pipes[NUMPIPES][NUMFILEDESC]) {
+    char buffer[STRLEN], output[STRLEN];
+    fd_set original, copy;
+    FILE *op = fopen("output.txt", "w");
+    int i, nfds = FD_SETSIZE, sec, msec;
+    
     FD_ZERO(&original);
     /* Watch read-ends and close write-ends */
     for (i = 0; i < NUMPIPES; i++) {
@@ -89,51 +94,7 @@ int main(void) {
     return 0;
 }
 
-/*int parent(void) {
-    char buffer[STRLEN], output[STRLEN];
-    fd_set original, copy;
-    FILE *op = fopen("output.txt", "w");
-    int i, nfds = pipes[NUMPIPES][0], sec, msec;
-    
-    FD_ZERO(&original);
-
-    for (i = 0; i < NUMPIPES; i++) {
-        FD_SET(pipes[i][0], &original);
-        if (close(pipes[i][1]) == -1) {
-            printf("%s %d.\n", CLOSEW_ERROR, i);
-            exit(1);
-        }
-    }
-    
-    copy = original;
-    
-    while (select(nfds, &original, NULL, NULL, NULL) > 0) {
-        for (i = 0; i < NUMPIPES; i++) {
-            if (FD_ISSET(pipes[i][0], &original)) {
-                if (read(pipes[i][0], buffer, STRLEN) > 0) {
-                    printf("%s", buffer);
-                    gettimeofday(&stop, NULL);
-                    sec = stop.tv_sec - start.tv_sec;
-                    msec = stop.tv_usec - start.tv_usec;
-                    sprintf(output, "%1d:%2.3f: %s", 0, sec + (msec / MICRO), buffer);
-                    printf("%s", output);
-                    fprintf(op, "%s", output);
-                }
-            }
-        }
-        
-        if (waitpid(-1, NULL, WNOHANG) == -1) {
-            fclose(op);
-            return 0;
-        }
-        
-        original = copy;
-    }
-    fclose(op);
-    return 0;
-}*/
-
-int child(int id) {
+int child(int id, int pipes[NUMPIPES][NUMFILEDESC]) {
     char buffer[STRLEN], std_in[STRLEN];
     struct timeval child_start, child_stop;
     int sec, msec, message = 1, random;
