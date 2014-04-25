@@ -10,7 +10,6 @@
 #define MICRO 1000000.0
 #define TIMER 30
 
-static const char FILE_NAME[] = "output.txt";
 static const char PIPE_ERROR[] = "ERROR: Piping failed.\n";
 static const char FORK_ERROR[] = "ERROR: Forking failed.\n";
 static const char CLOSEW_ERROR[] = "ERROR: Parent failed in closing write-end of pipe";
@@ -53,7 +52,7 @@ int main(void) {
 int parent(int pipes[NUMPIPES][NUMFILEDESC]) {
     char buffer[STRLEN], output[STRLEN];
     fd_set original, copy;
-    FILE *op = fopen(FILE_NAME, "w");
+    FILE *op = fopen("output.txt", "w");
     int i, nfds = pipes[NUMPIPES][0], sec, msec;
     
     FD_ZERO(&original);
