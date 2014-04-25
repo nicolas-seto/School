@@ -133,6 +133,7 @@ int child(int id) {
             
             sprintf(buffer, "%1d:%2.3f: %s\n", 0, 
                 sec + (msec / MICRO), std_in);
+            printf("%s", buffer);
         }
         
         write(pipes[id - 1][1], buffer, STRLEN);
