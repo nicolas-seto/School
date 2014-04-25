@@ -17,7 +17,7 @@ static const char CLOSER_ERROR[] = "ERROR: Child failed in closing read-end of p
 struct timeval start, stop;
 
 int parent(int pipes[NUMPIPES][NUMFILEDESC]);
-int child(int id, int pipe[]);
+int child(int id, int pipes[NUMPIPES][NUMFILEDESC]);
 
 int main(void) {
     int pipes[NUMPIPES][NUMFILEDESC];
@@ -41,7 +41,7 @@ int main(void) {
             printf("%s", FORK_ERROR);
             exit(1);
         } else if (childpid == 0) {
-            child(i + 1, pipes[i]);
+            child(i + 1, pipes);
         }
     }
     /* Have the parent process watch the pipes */
@@ -93,12 +93,12 @@ int parent(int pipes[NUMPIPES][NUMFILEDESC]) {
     return 0;
 }
 
-int child(int id, int pipe[]) {
+int child(int id, int pipes[NUMPIPES][NUMFILEDESC]) {
     char buffer[STRLEN], std_in[STRLEN];
     struct timeval child_start, child_stop;
     int sec, msec, message = 1, random;
     
-    if (close(pipe[0]) == -1) {
+    if (close(pipe[id-1][0]) == -1) {
         printf("%s %d.\n", CLOSER_ERROR, id);
         exit(1);
     }
@@ -135,7 +135,7 @@ int child(int id, int pipe[]) {
                 sec + (msec / MICRO), std_in);
         }
         
-        write(pipe[1], buffer, STRLEN);
+        write(pipe[id-1][1], buffer, STRLEN);
         gettimeofday(&child_stop, NULL);
     } while (child_stop.tv_sec - child_start.tv_sec < TIMER);
     
