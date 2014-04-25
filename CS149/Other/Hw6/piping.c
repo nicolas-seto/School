@@ -10,6 +10,7 @@
 #define MICRO 1000000.0
 #define TIMER 30
 
+static const char FILE_NAME[] = "output.txt";
 static const char PIPE_ERROR[] = "ERROR: Piping failed.\n";
 static const char FORK_ERROR[] = "ERROR: Forking failed.\n";
 static const char CLOSEW_ERROR[] = "ERROR: Parent failed in closing write-end of pipe";
@@ -53,7 +54,7 @@ int main(void) {
 int parent(int pipes[NUMPIPES][NUMFILEDESC]) {
     char buffer[STRLEN], output[STRLEN];
     fd_set original, copy;
-    FILE *op = fopen("output.txt", "w");
+    FILE *op = fopen(FILE_NAME, "w");
     int i, nfds = FD_SETSIZE, sec, msec;
     
     FD_ZERO(&original);
@@ -72,12 +73,10 @@ int parent(int pipes[NUMPIPES][NUMFILEDESC]) {
         for (i = 0; i < NUMPIPES; i++) {
             if (FD_ISSET(pipes[i][0], &original)) {
                 if (read(pipes[i][0], buffer, STRLEN) > 0) {
-                    printf("%s", buffer);
                     gettimeofday(&stop, NULL);
                     sec = stop.tv_sec - start.tv_sec;
                     msec = stop.tv_usec - start.tv_usec;
                     sprintf(output, "%1d:%2.3f: %s", 0, sec + (msec / MICRO), buffer);
-                    printf("%s", output);
                     fprintf(op, "%s", output);
                 }
             }
@@ -104,8 +103,6 @@ int child(int id, int pipe[NUMFILEDESC]) {
         exit(1);
     }
     
-    printf("Executing child %d\n", id);
-    
     gettimeofday(&stop, NULL);
     srand(stop.tv_usec - start.tv_usec);
     
@@ -124,7 +121,6 @@ int child(int id, int pipe[NUMFILEDESC]) {
             
             sprintf(buffer, "%1d:%2.3f: Child %d message %d\n", 0, 
                 sec + (msec / MICRO), id, message++);
-            printf("%s", buffer);
         } else { /* Child who reads stdin */
             scanf("%s", std_in);
             
@@ -134,7 +130,6 @@ int child(int id, int pipe[NUMFILEDESC]) {
             
             sprintf(buffer, "%1d:%2.3f: Child %d %s\n", 0, 
                 sec + (msec / MICRO), id, std_in);
-            printf("%s", buffer);
         }
         
         write(pipe[1], buffer, STRLEN);
