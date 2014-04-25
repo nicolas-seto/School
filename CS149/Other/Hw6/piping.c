@@ -17,7 +17,7 @@ static const char CLOSEW_ERROR[] = "ERROR: Parent failed in closing write-end of
 static const char CLOSER_ERROR[] = "ERROR: Child failed in closing read-end of pipe";
 struct timeval start, stop;
 
-int parent(int pipes[][NUMFILEDESC]);
+int parent(int pipes[NUMPIPES][NUMFILEDESC]);
 int child(int id, int pipe[]);
 
 int main(void) {
@@ -30,7 +30,7 @@ int main(void) {
     for (i = 0; i < NUMPIPES; i++) {
         /* Create the pipes */
         if (pipe(pipes[i]) == -1) {
-            fprintf(stderr, "%s", PIPE_ERROR);
+            printf("%s", PIPE_ERROR);
             exit(1);
         }
         
@@ -39,7 +39,7 @@ int main(void) {
         
         /* Begin forking */
         if ((childpid = fork()) == -1) {
-            fprintf(stderr, "%s", FORK_ERROR);
+            printf("%s", FORK_ERROR);
             exit(1);
         } else {
             child(i + 1, pipes[i]);
@@ -50,7 +50,7 @@ int main(void) {
     return 0;
 }
 
-int parent(int pipes[][NUMFILEDESC]) {
+int parent(int pipes[NUMPIPES][NUMFILEDESC]) {
     char buffer[STRLEN], output[STRLEN];
     fd_set original, copy;
     FILE *op = fopen(FILE_NAME, "w");
@@ -61,7 +61,7 @@ int parent(int pipes[][NUMFILEDESC]) {
     for (i = 0; i < NUMPIPES; i++) {
         FD_SET(pipes[i][0], &original);
         if (close(pipes[i][1]) == -1) {
-            fprintf(stderr, "%s %d.\n", CLOSEW_ERROR, i);
+            printf("%s %d.\n", CLOSEW_ERROR, i);
             exit(1);
         }
     }
@@ -98,7 +98,7 @@ int child(int id, int pipe[]) {
     int sec, msec, message = 1, random;
     
     if (close(pipe[0]) == -1) {
-        fprintf(stderr, "%s %d.\n", CLOSER_ERROR, id);
+        printf("%s %d.\n", CLOSER_ERROR, id);
         exit(1);
     }
     
