@@ -48,7 +48,7 @@ int main(void) {
         }
     }
     
-    int nfds = pipes[NUMPIPES][0];
+    int nfds = FD_SETSIZE;
     
     /* Have the parent process watch the pipes */
     FD_ZERO(&original);
